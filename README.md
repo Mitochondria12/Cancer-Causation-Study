@@ -9,3 +9,5 @@ When the fragments become sufficiently small enough it will be possible to look 
 We obviously will want to knockout fragments which have no impact, during the feature selection, we will eliminate mutation frequency for the average cancer which
 are equal to zero reducing the pixel size of each image. 
 This project will also need whole mutation data for patients without cancer, so that the model can identify healthy tissue patterns.
+
+This is a rough draft of my project, as I had multiple versions of my masters research mutation frequency code I am having to review which file is functional.
