@@ -11,3 +11,4 @@ are equal to zero reducing the pixel size of each image.
 This project will also need whole mutation data for patients without cancer, so that the model can identify healthy tissue patterns.
 
 This is a rough draft of my project, as I had multiple versions of my masters research mutation frequency code I am having to review which file is functional.
+I have updated one of the modules and I am gradually improving its readability.
