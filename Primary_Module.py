@@ -4,16 +4,15 @@ Created on Thu Jun 20 16:16:39 2019
 
 @author: jshar
 """
-import os,glob,errno,shutil,math,xlrd,csv,pandas as pd,time,re,numpy as np,collections,getpass,sys,os.path
+import os,glob,errno,shutil,math,csv,pandas as pd,time,re,numpy as np,collections,getpass,sys,os.path
 from time import sleep
 from multiprocessing import Pool
-from Tertiary_Module import DirectoryCreation
+from Tertiary_Module import directory_creation
 from decimal import *
 from Secondary_Module import ChromosomeSequenceData,FragmentBaseCoverage,AllFragmentsOfChromosomeBaseCoverage,AllChromosomesFragmentsBaseCoverage
-username =getpass.getuser()
-window_directory="C:/Users/"+username+"/Documents/"
-directory_creation(window_directory)
 
+directory_creation()
+print("yes")
 def chromosomexfragmentlist(FragmentSize,ChromosomeNumber):#Fragment List Generators for chromosomes.
     with open(r""+str(Window_Directory)+"/Input/ReferenceGenome/chr"+str(ChromosomeNumber)+".fa") as text_file:
         text_data = text_file.read()

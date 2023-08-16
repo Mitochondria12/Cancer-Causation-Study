@@ -69,7 +69,9 @@ def check_data_presence(window_directory, directory_restart):
             return True
     return False
 
-def directory_creation(window_directory):
+def directory_creation():
+    username = os.getlogin()
+    window_directory = "C:/Users/" + username + "/Documents/"
     # Main function to control directory creation and data presence check
     directory_restart = create_directories(window_directory)
     restart_required = directory_restart or check_data_presence(window_directory, directory_restart)
@@ -77,6 +79,5 @@ def directory_creation(window_directory):
         sleep(5)
         os.execl(sys.executable, sys.executable, *sys.argv)  # Restart the program
 
-username = os.getlogin()
-window_directory = "C:/Users/" + username + "/Documents/"
-directory_creation(window_directory)
+
+
