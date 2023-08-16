@@ -6,125 +6,76 @@ Created on Mon Mar 15 17:06:46 2021
 """
 import os
 import sys
+import glob
 from time import sleep
-import os,glob,errno,shutil,math,csv,pandas as pd,time,re,numpy as np,collections,getpass,sys,os.path
-from time import sleep
-from multiprocessing import Pool
-from decimal import *
+import getpass
 
-# Get the username to define the window directory
+def create_single_directory(directory):
+    # Create a single directory and return True if created, False if it already exists
+    try:
+        os.makedirs(directory)
+        return True
+    except FileExistsError:
+        return False
+    except Exception as e:
+        print(f"An error occurred while creating {directory}: {e}")
+        print("Ensure your main directory is on a Windows OS.")
+        sys.exit(1)
 
-username =getpass.getuser()
-window_directory="C:/Users/"+username+"/Documents/"
-
+def print_with_delays(messages, delay=1.5):
+    # Print messages with delays between them
+    for message in messages:
+        print(message)
+        sleep(delay)
 
 def create_directories(window_directory):
-    
-    # Indicates whether a restart is required
-    restart_decision=True
-    
-    # Define the directories to be created
+    # Create required directories and print messages based on their creation status
     directories = [
         window_directory + 'Mutation_Scanner/Input/ReferenceGenome',
         window_directory + 'Mutation_Scanner/Input/Samples',
         window_directory + 'Mutation_Scanner/Output'
     ]
-    
-    #Count of created subdirectories
-    number_of_sub_folders=0
-    for directory in directories:
-        try:
-            os.makedirs(directory)
-            number_of_sub_folders+=1
-        except FileExistsError: # Directory already exists; pass silently
-            pass
-        except Exception as e: # Handle any other exception
-            print(f"An error occurred while creating {directory}: {e}")
-            print("Ensure your main directory is on a windows os.")
-            os.execl(sys.executable, sys.executable, *sys.argv)
-            
-    #This occurs when directories already exist.
-    if number_of_sub_folders==0: 
-        restart_decision=False
-        
-    # This occurs when no directories exist.    
-    elif number_of_sub_folders==3:
-        print("Genome Mutation Frequency Program directories created.")
-        # Delays are added to give the user time to read the messages
-        sleep(1.5)
-        print("Please now add the relevant data to the directories.")
-        sleep(1.5)
-        print("This program will now restart.")
-        sleep(1.5)
-        
-    #This occurs when some directories exist but not all.
-    elif number_of_sub_folders>0 and number_of_sub_folders <3:
-        print("Genome Mutation Frequency Program directories initally missing and now readded.")
-        sleep(1.5)
-        print("Please now add the relevant data to the directories.")
-        sleep(1.5)
-        print("This program will now restart.")
-        sleep(1.5)
+    created_count = sum([create_single_directory(directory) for directory in directories])
+    if created_count == 3:
+        print_with_delays([
+            "Genome Mutation Frequency Program directories created.",
+            "Please now add the relevant data to the directories.",
+            "This program will now restart."
+        ])
+        return True
+    elif created_count > 0:
+        print_with_delays([
+            "Genome Mutation Frequency Program directories initially missing and now readded.",
+            "Please now add the relevant data to the directories.",
+            "This program will now restart."
+        ])
+        return True
+    return False
 
-    return(restart_decision)
-
-def check_data_presence(window_directory,directory_status=True):
-    
-    
-    if directory_status==True:
-        pass
-    else:
-            
-        #Logic Gates
-        data_missing=[]
-        restart_decision=True
-        
-        # Define paths to the required data
+def check_data_presence(window_directory, directory_restart):
+    # Check if required data files are present in the directories
+    if not directory_restart:
         reference_genome_path = window_directory + 'Mutation_Scanner/Input/ReferenceGenome'
         samples_path = window_directory + 'Mutation_Scanner/Input/Samples'
-    
-        # Check if the reference genome files are present
+        data_missing = []
         if not glob.glob(reference_genome_path + '/*.fa'):
-            data_missing.append("Genome") #Reference Genome missing
-    
-        # Check if the sample data files are present (e.g., Excel files)
+            data_missing.append("Genome")
         if not glob.glob(samples_path + '/*.xlsx'):
-            data_missing.append("Sample") # Sample Data missing
-        
-        #This occurs when your directorie has all the data required.
-        if len(data_missing)==0:
-            restart_decision=False
-            
-        #This occurs when your directories only has some of the data required.
-        elif len(data_missing)==1:
-            print("The directory has no {} data present, please add them to continue.".format(data_missing[0]))
-            sleep(1)
-            print("This program will now restart.")
-            sleep(1)
-            
-        #This occurs when your directories are empty and need data added.
-        elif len(data_missing)==2:
-            print("Please now add your data files to the directory.")
-            sleep(1)
-            print("This program will now restart.")
-            sleep(1)
-        return restart_decision
+            data_missing.append("Sample")
+        if data_missing:
+            messages = [f"The directory has no {', '.join(data_missing)} data present, please add them to continue.",
+                        "This program will now restart."]
+            print_with_delays(messages)
+            return True
+    return False
 
 def directory_creation(window_directory):
-    # Create required directories and get the restart decision
-    directories__restart_decision = create_directories(window_directory)
-
-    # Check the presence of required data and get the restart decision
-    data_restart_decision = check_data_presence(window_directory,directories__restart_decision)
-    
-    # Restart decision is not triggered because both data and directories are present.
-    if directories__restart_decision == False and data_restart_decision ==False:
-        pass 
-    
-    #Restart decision triggered because either or both data and directories are missing.
-    else:
+    # Main function to control directory creation and data presence check
+    directory_restart = create_directories(window_directory)
+    restart_required = directory_restart or check_data_presence(window_directory, directory_restart)
+    if restart_required:
         sleep(5)
-        os.execl(sys.executable, sys.executable, *sys.argv) # Restart the program
+        os.execl(sys.executable, sys.executable, *sys.argv)  # Restart the program
 
 username = os.getlogin()
 window_directory = "C:/Users/" + username + "/Documents/"
