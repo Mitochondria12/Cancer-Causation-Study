@@ -9,12 +9,12 @@ from time import sleep
 from multiprocessing import Pool
 from Tertiary_Module import directory_creation
 from decimal import *
-from Secondary_Module import ChromosomeSequenceData,FragmentBaseCoverage,AllFragmentsOfChromosomeBaseCoverage,AllChromosomesFragmentsBaseCoverage
+from Secondary_Module import all_chromosomes_fragments_base_coverage
 
-directory_creation()
+Window_Directory=directory_creation()
 print("yes")
 def chromosomexfragmentlist(FragmentSize,ChromosomeNumber):#Fragment List Generators for chromosomes.
-    with open(r""+str(Window_Directory)+"/Input/ReferenceGenome/chr"+str(ChromosomeNumber)+".fa") as text_file:
+    with open(r""+str(Window_Directory)+"/Input/Reference Genome/chr"+str(ChromosomeNumber)+".fa") as text_file:
         text_data = text_file.read()
         list=re.sub("\n","",text_data)
         if ChromosomeNumber<10:
@@ -208,7 +208,7 @@ CancerType=input("Enter Cancer you wish to process.")
 print(CancerType+" selected as cancer type.")
 ChromosomeSizes=[]   #This is a list which contains each chromosome base pair size and the corresponding code used to calculate this value.
 for i in range(1,23):
-    with open(r""+str(Window_Directory)+"/Input/ReferenceGenome/chr"+str(i)+".fa") as text_file:
+    with open(r""+str(Window_Directory)+"/Input/Reference Genome/chr"+str(i)+".fa") as text_file:
             text_data = text_file.read()
             list=re.sub("\n","",text_data)
             if i<10:
@@ -317,7 +317,7 @@ for i in range(0,CodingFileCountC):
         
         GenomeFragmentColumn=WholeGenomeFragmentGenerator()#This generates a list of all genome fragments.
         print("6.Completed genome fragment list generation.This took"+str(time.time()-StartTime)+"Seconds.")
-        BaseCoveragePercentageColumn=AllChromosomesFragmentsBaseCoverage(Window_Directory,FragmentSize)#This generates a list of all genome fragments base coverage.
+        BaseCoveragePercentageColumn=all_chromosomes_fragments_base_coverage(Window_Directory,FragmentSize)#This generates a list of all genome fragments base coverage.
         print("7.Completed chromosomes fragments base coverage percentage list.This took "+str(time.time()-StartTime)+" Seconds.")
         
         CodingData=MutationPointDataCoding(CodingExcelSheet,SampleListC,DictCSampleRows,FragmentSize,ChromosomeSizes)#This is the coding mutation data ready to be added to a dataframe.
