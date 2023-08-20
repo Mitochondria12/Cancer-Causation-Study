@@ -11,8 +11,9 @@ from Tertiary_Module import directory_creation
 from decimal import *
 from Secondary_Module import all_chromosomes_fragments_base_coverage
 
-Window_Directory=directory_creation()
+Window_Directory=directory_creation() # Might cause issues. This performs the setup of the programs file structure and also finds computers directory structure for saving and finding program files
 print("yes")
+# with open os.path.join((os.path.expanduser("~"))),f"{ChromosomeNumber}.fa")
 def chromosomexfragmentlist(FragmentSize,ChromosomeNumber):#Fragment List Generators for chromosomes.
     with open(r""+str(Window_Directory)+"/Input/Reference Genome/chr"+str(ChromosomeNumber)+".fa") as text_file:
         text_data = text_file.read()
