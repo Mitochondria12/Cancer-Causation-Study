@@ -234,7 +234,7 @@ mutation_sample_unique_pairs_coding=set()
 #The function below would be the same as coding file would be the same as non coding, the reason it not because the dataframe has a different structure
 with open(os.path.join(program_directory_to_samples,"Crude Data",f"{cancer_type}_Coding.csv"),"r") as cancer_mutation_coding_data:
     #This open the cancer types mutation file as a csv file
-    csv_cancer_mutation_data=csv.reader(Cancer_Mutation_Coding_Data)
+    csv_cancer_mutation_data=csv.reader(cancer_mutation_coding_data)
     # This is a for loop which will iterate through all rows present in the csv file
     for row in csv_cancer_mutation_data:
 
@@ -256,20 +256,21 @@ with open(os.path.join(program_directory_to_samples,"Crude Data",f"{cancer_type}
                     mutation_genome_positions_coding.append(row[25])
                     #The specific mutation patient pair is added to a set of unique pairs to prevent duplicates being added.
                     mutation_sample_unique_pairs_coding.add(str(row[5])+str(row[25]))
-# This variable NoFilesC is a number which represents the number of samples divided by one million
-NoFilesC=((len(sample_id_coding))/(1000000))
-#Using the above variable undergo a for loop in range of the NoFilesC variable rounded up. 
+
+# This variable number_of_files_coding is a number which represents the number of samples divided by one million
+number_of_files_coding=((len(sample_id_coding))/(1000000))
+#Using the above variable undergo a for loop in range of the number_of_files_coding variable rounded up. 
 #This process will split up the large cancer file into subsequent small files which can be processed.
-for IterationC in range(0,math.ceil(NoFilesC)):
+for IterationC in range(0,math.ceil(number_of_files_coding)):
     XC=(1000000*IterationC)
     YC=(1000000*(IterationC+1))
-    #Creates a dictionary called FileData. 
-    FileData= {"SampleId":sample_id_coding[XC:YC],"MutationPosition":mutation_genome_positions_coding[XC:YC]}
-    # Dictionary FileData used to make a dataframe
-    DFC=pd.DataFrame(FileData,index=(sample_id_coding[XC:YC]))
+    #Creates a dictionary called file_data. 
+    file_data= {"SampleId":sample_id_coding[XC:YC],"MutationPosition":mutation_genome_positions_coding[XC:YC]}
+    # Dictionary file_data used to make a dataframe
+    DFC=pd.DataFrame(file_data,index=(sample_id_coding[XC:YC]))
     DFC.to_excel((r""+str(Window_Directory)+"/Input/Samples/SmallFiles/"+str(cancer_type)+"_Coding_Sub"+str(IterationC+1)+".xlsx"), index = None, header=True)
-print(len(sample_id_coding))
-print(len(mutation_sample_unique_pairs_coding))
+
+
 #(str(Window_Directory)+"/Input/Samples/"+(str(cancer_type)+"_Non_Coding.csv))
 SampleIdNC=[]
 MutationPositionNC=[]
@@ -300,24 +301,25 @@ for IterationNC in range(0,math.ceil(NolistsNC)):#round(Nolists)+1)):
     DFNC.to_excel((r""+str(Window_Directory)+"/Input/Samples/SmallFiles/"+(str(cancer_type)+"_Non_Coding_Sub"+str(IterationNC+1)+".xlsx")), index = None, header=True)
 print("2.Data processed into accessible excel files.This took "+str(time.time()-StartTime)+" Seconds.")
 
-SampleFiles=([x[2] for x in os.walk(r""+str(Window_Directory)+"/Input/Samples/SmallFiles/")])[0]
-CodingFileCountC=0
-for i in SampleFiles:
-    if str(cancer_type+"_Coding_Sub") in i:
-        CodingFileCountC+=1
+#Looks through all files in the directory location listed and counts the number of files
+names_of_formated_mutation_files=([x[2] for x in os.walk(r""+str(Window_Directory)+"/Input/Samples/SmallFiles/")])[0]
+number_of_processed_coding_files=0
+for file_name in names_of_formated_mutation_files:
+    if str(cancer_type+"_Coding_Sub") in file_name:
+        number_of_processed_coding_files+=1
 
-SampleFiles=([x[2] for x in os.walk(r""+str(Window_Directory)+"/Input/Samples/SmallFiles/")])[0]
-CodingFileCountNC=0
-for i in SampleFiles:
-    if str(cancer_type+"_Non_Coding_Sub") in i:
-        CodingFileCountNC+=1
-print(CodingFileCountC)
+number_of_processed_non_coding_files=0
+for file_name in names_of_formated_mutation_files:
+    if str(cancer_type+"_Non_Coding_Sub") in file_name:
+        number_of_processed_non_coding_files+=1
+
+        
 totalsamples=len(SampleIdNC)+len(sample_id_coding)
 if(totalsamples)>16380:
     print("Sheet Size not large enough.")
 else:
     print("Sheet size large enough.")
-for i in range(0,CodingFileCountC):
+for i in range(0,number_of_processed_coding_files):
     if i ==0:
         CancerCodingSampleData=((str(Window_Directory)+"/Input/Samples/SmallFiles/"+(str(cancer_type)+"_Coding_Sub1.xlsx")))
         CWB=xlrd.open_workbook(CancerCodingSampleData) #This opens the coding mutation data excel file.
@@ -378,7 +380,7 @@ for i in range(0,CodingFileCountC):
         print("14.Completed creation of Non Coding Data.This took "+str(time.time()-StartTime)+" Seconds.")
         IndividualSamples_ExcelCodingAndNonCodingCreator(NonCodingData,SampleListNC,cancer_type,Window_Directory)
     print("Processed coding files")
-for i in range(0,CodingFileCountC):
+for i in range(0,number_of_processed_coding_files):
     CancerNonCodingSampleData=((str(Window_Directory)+"/Input/Samples/SmallFiles/"+(str(cancer_type)+"_Non_Coding_Sub"+str(i+1)+".xlsx")))
     NCWB=xlrd.open_workbook(CancerNonCodingSampleData) #This opens the coding mutation data excel file.
     NonCodingExcelSheet=NCWB.sheet_by_index(0) 
