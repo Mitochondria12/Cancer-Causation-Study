@@ -32,7 +32,8 @@ def create_directories(base_directory):
     # Create required directories and print messages based on their creation status
     directories = [
         os.path.join(base_directory, 'Mutation_Scanner', 'Input', 'Reference Genome'),
-        os.path.join(base_directory, 'Mutation_Scanner', 'Input', 'Samples'),
+        os.path.join(base_directory, 'Mutation_Scanner', 'Input', 'Samples','Crude Data'),
+        os.path.join(base_directory, 'Mutation_Scanner', 'Input', 'Samples','Formatted'),
         os.path.join(base_directory, 'Mutation_Scanner', 'Output')
     ]
     created_count = sum([create_single_directory(directory) for directory in directories])
@@ -56,7 +57,7 @@ def check_data_presence(base_directory, directory_restart):
     # Check if required data files are present in the directories
     if not directory_restart:
         reference_genome_path = os.path.join(base_directory, 'Mutation_Scanner', 'Input', 'Reference Genome')
-        samples_path = os.path.join(base_directory, 'Mutation_Scanner', 'Input', 'Samples')
+        samples_path = os.path.join(base_directory, 'Mutation_Scanner', 'Input', 'Samples','Crude Data')
         data_missing = []
         if not glob.glob(reference_genome_path + '/*.fa'):
             data_missing.append("Genome")
