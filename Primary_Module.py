@@ -11,11 +11,16 @@ from Tertiary_Module import directory_creation
 from decimal import *
 from Secondary_Module import all_chromosomes_fragments_base_coverage
 
-Window_Directory=directory_creation() # Might cause issues. This performs the setup of the programs file structure and also finds computers directory structure for saving and finding program files
+#  This performs the setup of the programs file structure.
+directory_creation() 
 print("yes")
-# with open os.path.join((os.path.expanduser("~"))),f"{ChromosomeNumber}.fa")
+path_to_program_directory=os.path.join((os.path.expanduser("~")),"Documents","Mutation_Scanner")
+program_directory_to_samples=os.path.join(path_to_program_directory,"Input","Reference Genome")
+program_directory_to_reference_genomes=os.path.join(path_to_program_directory,"Input","Samples")
+program_directory_to_output=os.path.join(path_to_program_directory,"Output")
+
 def chromosomexfragmentlist(FragmentSize,ChromosomeNumber):#Fragment List Generators for chromosomes.
-    with open(r""+str(Window_Directory)+"/Input/Reference Genome/chr"+str(ChromosomeNumber)+".fa") as text_file:
+    with open(os.path.join(program_directory_to_reference_genomes,f"{ChromosomeNumber}.fa","r")) as text_file:
         text_data = text_file.read()
         list=re.sub("\n","",text_data)
         if ChromosomeNumber<10:

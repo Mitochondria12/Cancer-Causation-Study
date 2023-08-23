@@ -78,7 +78,6 @@ def directory_creation():
     if restart_required:
         sleep(5)
         os.execl(sys.executable, sys.executable, *sys.argv)  # Restart the program
-    return(base_directory) # This addition may cause issues.
 
 #This should work on any operating system now
 
