@@ -113,20 +113,20 @@ def Dictionary_Of_Fragment_mutation(selected_fragment_size,formatted_mutation_da
     number_of_fragments=math.ceil(chromosome_size/selected_fragment_size)
     
     for fragment_index in range(0,(number_of_fragments)):
-        a=(f"Chromosome {chromosome_number} Fragment {fragment_index}, Basepairs {fragment_index*selected_fragment_size+1}-{fragment_index*selected_fragment_size+selected_fragment_size}")
-        chromosomes.update({a:0})
+        fragment_descriptor=(f"Chromosome {chromosome_number} Fragment {fragment_index}, Basepairs {fragment_index*selected_fragment_size+1}-{fragment_index*selected_fragment_size+selected_fragment_size}")
+        chromosomes.update({fragment_descriptor:0})
 
     for mutation in formatted_mutation_data:
         if mutation==0:
             continue
         else:
             i=math.floor(mutation/1000000)
-            a=("Chromosome"+str(chromosome_number)+"Fragment"+str(i)+",Basepairs "+str(i*selected_fragment_size+1)+"-"+str(i*selected_fragment_size+selected_fragment_size))
-            if chromosomes.get(a) ==0:
-                    chromosomes.update({a:1})
-            else:
-                b=((chromosomes.get(a))+1)
-                chromosomes.update({a:b})
+            fragment_descriptor=(f"Chromosome {chromosome_number} Fragment {fragment_index}, Basepairs {fragment_index*selected_fragment_size+1}-{fragment_index*selected_fragment_size+selected_fragment_size}")
+            
+            # Update or initialize the count for the given fragment_descriptor
+            current_count = chromosomes.get(fragment_descriptor, 0)
+            chromosomes[fragment_descriptor] = current_count + 1
+
     return(chromosomes)
 
 def dictionary_to_list(ABC):#Converts chromosome dictionary into chromosome mutation fragment list for dataframe addition. 
