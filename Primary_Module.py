@@ -100,8 +100,8 @@ def extract_mutation_positions(chromosome_number, mutation_data):
 
 
 
-
-def Dictionary_Of_Fragment_mutation(selected_fragment_size,formatted_mutation_data,chromosome_number,chromosome_sizes):# Creates a Dictionary which has mutation count as one key and chromosome fragment location as the other.
+# Creates a Dictionary which has mutation count as one key and chromosome fragment location as the other.
+def dictionary_of_fragment_mutation(selected_fragment_size,formatted_mutation_data,chromosome_number,chromosome_sizes):
     chromosomes={}
 
     # Adjust for the off-by-one difference between chromosome numbering and list indexing
@@ -129,28 +129,30 @@ def Dictionary_Of_Fragment_mutation(selected_fragment_size,formatted_mutation_da
 
     return(chromosomes)
 
-def dictionary_to_list(ABC):#Converts chromosome dictionary into chromosome mutation fragment list for dataframe addition. 
-    C=[*ABC.values()]
-    return(C)
-
-def all_chromosome_mutation_locations(selected_fragment_size,original_mutation_data,chromosome_sizes):#Processes the mutation data for every chromosome,plots each chromosome data mutation point to a chromosome fragment location in  a dictionary,Converts chromosome dictionary into chromosome mutation fragment list for dataframe addition,Adds each chromosome mutation fragment dictionary list conversion into one giant list file.. 
+#Converts chromosome dictionary into chromosome mutation fragment list for dataframe addition. 
+def dictionary_to_list(chromosome_dictionary):
+    chromosome_list=[*chromosome_dictionary.values()]
+    return(chromosome_list)
+#Determines the number of mutation found within a chromosome fragment location, assigning this mapping to a dictionary,
+#Creates a list from the previous dictionary containing number of mutations per specific chromosome mutation fragment list 
+def all_chromosome_mutation_locations(selected_fragment_size,original_mutation_data,chromosome_sizes):
     AllChromosomeFragmentMutationList=[]
     for chromosome_number in range(1,23,1):
         formatted_mutation_data=extract_mutation_positions(chromosome_number,original_mutation_data)
-        AllChromosomeFragmentMutationDictionary=Dictionary_Of_Fragment_mutation(selected_fragment_size,formatted_mutation_data,chromosome_number,chromosome_sizes) 
+        AllChromosomeFragmentMutationDictionary=dictionary_of_fragment_mutation(selected_fragment_size,formatted_mutation_data,chromosome_number,chromosome_sizes) 
         AllChromosomeFragmentMutationList+=(dictionary_to_list(AllChromosomeFragmentMutationDictionary))
     return(AllChromosomeFragmentMutationList)    
    
-def MutationPointDataCoding(excelsheet,SampleList,dictA,selected_fragment_size,chromosome_sizes):#Each sample has its coding mutation data processed and added to a giant list of all sample mutation data.
+def coding_mutation_data(excelsheet,sample_list,dictA,selected_fragment_size,chromosome_sizes):#Each sample has its coding mutation data processed and added to a giant list of all sample mutation data.
     Samplesandmutationpoints=[]
     ExcelGenomePositionColumnCoordinates=0
     for i in range(0,excelsheet.ncols):
         if excelsheet.cell_value(0,i)=="MutationPosition":
             ExcelGenomePositionColumnCoordinates+=(int(i))
     
-    for i in range(0,len(SampleList)):
+    for i in range(0,len(sample_list)):
         #Begin=time.time()
-        SampleData=[SampleTablerowLocation for SampleTablerowLocation, Sample in dictA.items() if int(Sample)==SampleList[i]]
+        SampleData=[SampleTablerowLocation for SampleTablerowLocation, Sample in dictA.items() if int(Sample)==sample_list[i]]
         MutationGenomeLocationList=[excelsheet.cell_value(Samplerows,ExcelGenomePositionColumnCoordinates) for Samplerows in SampleData]
         MutationGenomeLocationList.sort()
         Samplesandmutationpoints.append(all_chromosome_mutation_locations(selected_fragment_size,MutationGenomeLocationList,chromosome_sizes))    
@@ -158,26 +160,26 @@ def MutationPointDataCoding(excelsheet,SampleList,dictA,selected_fragment_size,c
         #print(Complete-Begin)
     return(Samplesandmutationpoints)    
 
-def MutationPointDataNonCoding(excelsheet,SampleList,dictA,selected_fragment_size,chromosome_sizes):#Each sample has its non coding mutation data processed and added to a giant list of all sample mutation data.
+def non_coding_mutation_data(excelsheet,sample_list,dictA,selected_fragment_size,chromosome_sizes):#Each sample has its non coding mutation data processed and added to a giant list of all sample mutation data.
     Samplesandmutationpoints=[]
     ExcelGenomePositionColumnCoordinates=0
     for i in range(0,excelsheet.ncols):
         if excelsheet.cell_value(0,i)=="MutationPosition":
             ExcelGenomePositionColumnCoordinates+=(int(i))
-    for i in range(0,len(SampleList)):
-        SampleData=[SampleTablerowLocation for SampleTablerowLocation, Sample in dictA.items() if int(Sample)==SampleList[i]]
+    for i in range(0,len(sample_list)):
+        SampleData=[SampleTablerowLocation for SampleTablerowLocation, Sample in dictA.items() if int(Sample)==sample_list[i]]
         MutationGenomeLocationList=[excelsheet.cell_value(Samplerows,ExcelGenomePositionColumnCoordinates) for Samplerows in SampleData]
         MutationGenomeLocationList.sort()
         Samplesandmutationpoints.append(all_chromosome_mutation_locations(selected_fragment_size,MutationGenomeLocationList,chromosome_sizes))   
     return(Samplesandmutationpoints)    
 
-def IndividualSamples_ExcelCodingCreator(mutationdata,samplelist,selected_fragment_size,GenomeFragmentColumnData,BasePercentageColumnData,cancer_type,Window_Directory):# Coding sample mutation data presented into excel table with corresponding chromosome fragment location and base coverage percentages.
-    data = {"GenomeFragments":GenomeFragmentColumnData,"Encoded Base Percentage":BasePercentageColumnData}
-    df = pd.DataFrame(data,index=GenomeFragmentColumnData)
+def IndividualSamples_ExcelCodingCreator(mutation_data,sample_list,selected_fragment_size,autosome_chromsomes_fragment_names,BasePercentageColumnData,cancer_type,Window_Directory):# Coding sample mutation data presented into excel table with corresponding chromosome fragment location and base coverage percentages.
+    data = {"GenomeFragments":autosome_chromsomes_fragment_names,"Encoded Base Percentage":BasePercentageColumnData}
+    df = pd.DataFrame(data,index=autosome_chromsomes_fragment_names)
 
-    for i in range(0,len(samplelist),1):
-        value=mutationdata[i]
-        df[str(samplelist[i])] = value 
+    for i in range(0,len(sample_list),1):
+        value=mutation_data[i]
+        df[str(sample_list[i])] = value 
     df.to_excel (r""+str(Window_Directory)+"/Output/WholeGenomeMutationTables/"+cancer_type+"IndividualSamplesWholeGenomeFragmentMutationTable.xlsx", index = None, header=True)
     
 def IndividualSamples_ExcelCodingAndNonCodingCreator(NonCodingMutationData,NonCodingSampleNameList,cancer_type,Window_Directory):#Non Coding sample mutation data and coding sample mutation data combined into new excel table.
@@ -407,7 +409,7 @@ for i in range(0,number_of_processed_coding_files):
         BaseCoveragePercentageColumn=all_chromosomes_fragments_base_coverage(Window_Directory,selected_fragment_size)#This generates a list of all genome fragments base coverage.
         print("7.Completed chromosomes fragments base coverage percentage list.This took "+str(time.time()-StartTime)+" Seconds.")
         
-        CodingData=MutationPointDataCoding(CodingExcelSheet,SampleListC,DictCSamplerows,selected_fragment_size,chromosome_sizes)#This is the coding mutation data ready to be added to a dataframe.
+        CodingData=coding_mutation_data(CodingExcelSheet,SampleListC,DictCSamplerows,selected_fragment_size,chromosome_sizes)#This is the coding mutation data ready to be added to a dataframe.
         print("8.Completed creation of Coding Data.This took "+str(time.time()-StartTime)+" Seconds.")
         IndividualSamples_ExcelCodingCreator(CodingData,SampleListC,selected_fragment_size,GenomeFragmentColumn,BaseCoveragePercentageColumn,cancer_type,Window_Directory)#This processes the coding mutation data into a dataframe.
     else:
@@ -437,7 +439,7 @@ for i in range(0,number_of_processed_coding_files):
             DictNCSamplerows.update({CounterNC:int(Sample)})
             CounterNC=CounterNC+1
         print("13.Dictionary of Non Coding samples with corresponding row coordinates created.This took "+str(time.time()-StartTime)+" Seconds.")       
-        NonCodingData=MutationPointDataNonCoding(NonCodingExcelSheet,SampleListNC,DictNCSamplerows,selected_fragment_size,chromosome_sizes)#This is the non coding mutation data ready to be added to a dataframe.
+        NonCodingData=non_coding_mutation_data(NonCodingExcelSheet,SampleListNC,DictNCSamplerows,selected_fragment_size,chromosome_sizes)#This is the non coding mutation data ready to be added to a dataframe.
         print("14.Completed creation of Non Coding Data.This took "+str(time.time()-StartTime)+" Seconds.")
         IndividualSamples_ExcelCodingAndNonCodingCreator(NonCodingData,SampleListNC,cancer_type,Window_Directory)
     print("Processed coding files")
@@ -469,7 +471,7 @@ for i in range(0,number_of_processed_coding_files):
         DictNCSamplerows.update({CounterNC:int(Sample)})
         CounterNC=CounterNC+1
     print("13.Dictionary of Non Coding samples with corresponding row coordinates created.This took "+str(time.time()-StartTime)+" Seconds.")       
-    NonCodingData=MutationPointDataNonCoding(NonCodingExcelSheet,SampleListNC,DictNCSamplerows,selected_fragment_size,chromosome_sizes)#This is the non coding mutation data ready to be added to a dataframe.
+    NonCodingData=non_coding_mutation_data(NonCodingExcelSheet,SampleListNC,DictNCSamplerows,selected_fragment_size,chromosome_sizes)#This is the non coding mutation data ready to be added to a dataframe.
     print("14.Completed creation of Non Coding Data.This took "+str(time.time()-StartTime)+" Seconds.")
     IndividualSamples_ExcelCodingAndNonCodingCreator(NonCodingData,SampleListNC,cancer_type,Window_Directory)#This processes the coding and non coding mutation data into a dataframe.
 print("15.Completed creation of Coding and Non Coding Excel Sample Data File.This took "+str(time.time()-StartTime)+" Seconds.")
