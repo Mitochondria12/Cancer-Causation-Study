@@ -34,10 +34,10 @@ def create_directories(base_directory):
         os.path.join(base_directory, 'Mutation_Scanner', 'Input', 'Reference Genome'),
         os.path.join(base_directory, 'Mutation_Scanner', 'Input', 'Samples','Crude Data'),
         os.path.join(base_directory, 'Mutation_Scanner', 'Input', 'Samples','Formatted'),
-        os.path.join(base_directory, 'Mutation_Scanner', 'Output')
+        os.path.join(base_directory, 'Mutation_Scanner', 'Output',"Cancer Genomes Mutation Frequency Distribution")
     ]
     created_count = sum([create_single_directory(directory) for directory in directories])
-    if created_count == 3:
+    if created_count == 4:
         print_with_delays([
             "Genome Mutation Frequency Program directories created.",
             "Please now add the relevant data to the directories.",
@@ -82,3 +82,4 @@ def directory_creation():
 
 #This should work on any operating system now
 
+#WholeGenomeMutationTables is a subdirectory in the output folder
