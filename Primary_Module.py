@@ -488,27 +488,33 @@ print("15.Completed creation of Coding and Non Coding Excel Sample data File.Thi
 
 
 print("16.Commencing sample mutation average excel file creation.")
+
+#I need to refactor the code by doing list comprehenesions 
+
 #The mutation frequencies for each individual patient are known, however we are interested in the overall average cancer cohorts
 # As a result we need to determine the average mutation frequency for every fragments created so we can see the most common 
 # cancer mutation frequency hotspots for each cancer type
 
 #File is read
 file_of_interest=f"{cancer_type}IndividualSamplesWholeGenomeFragmentMutationTable.xlsx"
+
 file_path=os.path.join(program_directory_to_cancer_genome_mutation_frequency,file_of_interest)
 
+cancer_samples_mutation_freq_distribution_file=xlrd.open_workbook(file_path) 
 
-WGWB = xlrd.open_workbook(str(window_directory)+"/Output/Cancer Genomes Mutation Frequency Distribution/"+str(cancer_type)+"IndividualSamplesWholeGenomeFragmentMutationTable.xlsx") 
-WholeGenomeExcelSheet=WGWB.sheet_by_index(0) 
-WholeGenomeExcelSheet.cell_value(0, 0)
+cancer_samples_mutation_freq_distribution_data=cancer_samples_mutation_freq_distribution_file.sheet_by_index(0) 
+
 multi_chromosome_fragment_mutation_freq=[]
-for Number in range(1,WholeGenomeExcelSheet.nrows):
-    Mean=0
-    for i in range(2,WholeGenomeExcelSheet.ncols):
-        Mean=Mean+int(WholeGenomeExcelSheet.cell_value(Number,i))
-    multi_chromosome_fragment_mutation_freq.append(Mean/(WholeGenomeExcelSheet.ncols-2))
 
+for fragment in range(1,cancer_samples_mutation_freq_distribution_data.nrows):
 
+    fragment_mean_mutation_frequency=0
 
+    for cancer_sample in range(2,cancer_samples_mutation_freq_distribution_data.ncols):
+
+        fragment_mean_mutation_frequency=fragment_mean_mutation_frequency+int(cancer_samples_mutation_freq_distribution_data.cell_value(fragment,cancer_sample))
+    
+    multi_chromosome_fragment_mutation_freq.append(fragment_mean_mutation_frequency/(cancer_samples_mutation_freq_distribution_data.ncols-2))
 
 cancer_cohort_average_mutation_frequency_distribution = {"Chromosome Fragments":all_chromosome_fragments,"Encoded Base Percentage":fragment_sequence_percentage,"Samples mean mutatione rate per fragment":multi_chromosome_fragment_mutation_freq}
 
@@ -522,17 +528,13 @@ file_path=os.path.join(program_directory_to_cancer_genome_mutation_frequency,fil
 
 cancer_cohort_average_mutation_frequency_distribution_dataframe.to_excel (file_path, index = None, header=True) 
 
-
-
-
 print("17.Completed Creation of Mean Sample Whole Genome Fragment Mutation Rate Excel Table.This took "+str(time.time()-StartTime)+" Seconds.")
-
-
 
 print("18.Biomarker Addition beginning.")
 
 # Importing the genomic data for blood proteins from an Excel file
 blood_protein_genomic_file = os.path.join(program_directory_to_crude_data, "Blood Proteins Genomic data.xlsx")
+
 blood_protein_genomic_file_data = pd.read_excel(blood_protein_genomic_file, sheet_name="Sheet1")
 
 # Initialize an empty list to hold proteins ordered by their fragment range
@@ -542,7 +544,9 @@ ordered_proteins_by_fragment_range = []
 for fragment in range(0, len(average_mutation_frequency_dataframe)):
     # Extract chromosome number, start position, and end position from the fragment
     chromosome_number = int((re.search('Chromosome(.*)Fragment', average_mutation_frequency_dataframe.iat[fragment, 0])).group(1))
+
     start_position = int((re.search('Basepairs(.*)-', average_mutation_frequency_dataframe.iat[fragment, 0])).group(1))
+
     end_position = int((re.search('-(.*)', average_mutation_frequency_dataframe.iat[fragment, 0])).group(1))
     
     # Initialize an empty list to hold proteins found in the current fragment's genomic location
@@ -565,10 +569,7 @@ average_mutation_frequency_dataframe["Blood soluble proteins coded in fragment"]
 # Calculate the mean using the fragmentmean function
 mean = fragmentmean(average_mutation_frequency_dataframe)
 
-
 average_mutation_frequency_dataframe["pattern_yes_no"]=pattern(average_mutation_frequency_dataframe,mean)
-
-
 
 # Creating appropriate filename
 excel_filename=f"AvgMutFreq_{cancer_type}_BloodSolProtein.xlsx"
@@ -579,36 +580,47 @@ output_path=os.path.join(program_directory_to_cancer_biomarker_candidates,excel_
 # Save the DataFrame to Excel
 average_mutation_frequency_dataframe.to_excel(output_path, index = None, header=True)
 
-
 # Read the previously saved DataFrame containing average mutation frequencies and blood proteins
 avg_mut_freq_blood_sol_protein_file = output_path
+
 avg_mut_freq_blood_sol_protein_data = pd.read_excel(avg_mut_freq_blood_sol_protein_file, sheet_name="Sheet1")
 
 # Initialize empty lists to store Blood Soluble Proteins and Mutation Rates
 blood_soluble_proteins = []
+
 mutation_rate_data = []
 
 # Loop through the DataFrame to filter rows based on specific conditions
 for row in range(len(avg_mut_freq_blood_sol_protein_data)):
     # Check if the column at index 4 is 1 and the list of blood proteins at index 3 is not empty
     if avg_mut_freq_blood_sol_protein_data.iat[row, 4] == 1 and (avg_mut_freq_blood_sol_protein_data.iat[row, 3] != "[]"):
+
         # Append relevant Blood Soluble Proteins and Mutation Rates to the lists
         blood_soluble_proteins.append(avg_mut_freq_blood_sol_protein_data.iat[row, 3])
+
         mutation_rate_data.append(avg_mut_freq_blood_sol_protein_data.iat[row, 2])
 
 # Create a simplified DataFrame containing only the rows with Blood Soluble Proteins
 blood_proteins_only_fragments_data = {"MutationRate": mutation_rate_data, "Blood soluble proteins coded in fragment": blood_soluble_proteins}
+
 blood_proteins_only_fragments_dataframe = pd.DataFrame(blood_proteins_only_fragments_data, index=mutation_rate_data)
 
 # Save this filtered DataFrame to an Excel file
 biomarker_excel_filename = f"{cancer_type}_Biomarker_Mutation_Table_1.xlsx"
+
 biomarker_output_path = os.path.join(program_directory_to_cancer_biomarker_candidates, biomarker_excel_filename)
+
 blood_proteins_only_fragments_dataframe.to_excel(biomarker_output_path, index=None, header=True)
 
+#This part calculates the mean frequency for each subsequenty group which meets the relevant criteria,
+# I can definitely streamline this process by selecting the upper 5% means
 
 mean_table(window_directory,cancer_type,1)
+
 mean_table(window_directory,cancer_type,2)
+
 mean_table(window_directory,cancer_type,3)
+
 mean_table(window_directory,cancer_type,4)
 
 print("19.Program completed.")
