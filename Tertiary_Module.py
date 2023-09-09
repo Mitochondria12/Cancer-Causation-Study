@@ -34,7 +34,8 @@ def create_directories(base_directory):
         os.path.join(base_directory, 'Mutation_Scanner', 'Input', 'Reference Genome'),
         os.path.join(base_directory, 'Mutation_Scanner', 'Input', 'Samples','Crude Data'),
         os.path.join(base_directory, 'Mutation_Scanner', 'Input', 'Samples','Formatted'),
-        os.path.join(base_directory, 'Mutation_Scanner', 'Output',"Cancer Genomes Mutation Frequency Distribution")
+        os.path.join(base_directory, 'Mutation_Scanner', 'Output',"Cancer Genomes Mutation Frequency Distribution",
+        os.path.join(base_directory, 'Mutation_Scanner', 'Output',"Cancer Biomarker Candidates")
     ]
     created_count = sum([create_single_directory(directory) for directory in directories])
     if created_count == 4:
