@@ -10,20 +10,9 @@ from multiprocessing import Pool
 from Tertiary_Module import directory_creation
 from decimal import *
 from Secondary_Module import all_chromosomes_fragments_base_coverage
+import xlrd
 
-#  This performs the setup of the programs file structure.
-directory_creation() 
-
-# This is a list of file paths for different part of the program to save or load data
-path_to_program_directory=os.path.join((os.path.expanduser("~")),"Documents","Mutation_Scanner")
-program_directory_to_formatted_data=os.path.join(path_to_program_directory,"Input","Samples","Formatted")
-program_directory_to_crude_data=os.path.join(path_to_program_directory,"Input","Samples","Crude data")
-program_directory_to_reference_genomes=os.path.join(path_to_program_directory,"Input","Reference Genome")
-program_directory_to_cancer_genome_mutation_frequency=os.path.join(path_to_program_directory,"Output","Cancer Genomes Mutation Frequency Distribution")
-program_directory_to_cancer_biomarker_candidates=os.path.join(path_to_program_directory,"Output","Cancer Biomarker Candidates")
-# This function generates a list of fragment descriptors for a specified chromosome.
-# The list is used to create a table representing mutation frequency across the chromosome.
-
+#Below is a list of all functions
 def chromosome_number_fragment_list(desired_fragment_size, chromosome_number):
 
     # Open the chromosome file from the reference genome directory and read its data.
@@ -53,7 +42,6 @@ def chromosome_number_fragment_list(desired_fragment_size, chromosome_number):
 
     # Return the list of fragment descriptors.
     return chromosome_fragments
-
 
 # This function generates a list of fragment descriptors for all 22 autosomal human chromosomes.
 # It utilizes the chromosome_number_fragment_list function to generate fragment descriptors for each chromosome.
@@ -98,8 +86,6 @@ def extract_mutation_positions(chromosome_number, mutation_data):
     # The list now contains integer positions where mutations have occurred on the specified chromosome.
     return chromosome_mutation_list
 
-
-
 # Creates a Dictionary which has mutation count as one key and chromosome fragment location as the other.
 def dictionary_of_fragment_mutation(selected_fragment_size,formatted_mutation_data,chromosome_number,chromosome_sizes):
     chromosomes={}
@@ -133,6 +119,7 @@ def dictionary_of_fragment_mutation(selected_fragment_size,formatted_mutation_da
 def dictionary_to_list(chromosome_dictionary):
     chromosome_list=[*chromosome_dictionary.values()]
     return(chromosome_list)
+
 #Determines the number of mutation found within a chromosome fragment location, assigning this mapping to a dictionary,
 #Creates a list from the previous dictionary containing number of mutations per specific chromosome mutation fragment list 
 def all_chromosome_mutation_locations(selected_fragment_size,original_mutation_data,chromosome_sizes):
@@ -143,83 +130,90 @@ def all_chromosome_mutation_locations(selected_fragment_size,original_mutation_d
         AllChromosomeFragmentMutationList+=(dictionary_to_list(AllChromosomeFragmentMutationDictionary))
     return(AllChromosomeFragmentMutationList)    
    
-def coding_mutation_data(excelsheet,sample_list,dictA,selected_fragment_size,chromosome_sizes):#Each sample has its coding mutation data processed and added to a giant list of all sample mutation data.
+def coding_mutation_data(excel_sheet,sample_list,dictionary_alpha,selected_fragment_size,chromosome_sizes):#Each sample has its coding mutation data processed and added to a giant list of all sample mutation data.
     Samplesandmutationpoints=[]
     ExcelGenomePositionColumnCoordinates=0
-    for i in range(0,excelsheet.ncols):
-        if excelsheet.cell_value(0,i)=="MutationPosition":
+    for i in range(0,excel_sheet.ncols):
+        if excel_sheet.cell_value(0,i)=="MutationPosition":
             ExcelGenomePositionColumnCoordinates+=(int(i))
     
     for i in range(0,len(sample_list)):
         #Begin=time.time()
-        SampleData=[SampleTablerowLocation for SampleTablerowLocation, Sample in dictA.items() if int(Sample)==sample_list[i]]
-        MutationGenomeLocationList=[excelsheet.cell_value(Samplerows,ExcelGenomePositionColumnCoordinates) for Samplerows in SampleData]
+        SampleData=[SampleTablerowLocation for SampleTablerowLocation, sample in dictionary_alpha.items() if int(sample)==sample_list[i]]
+        MutationGenomeLocationList=[excel_sheet.cell_value(Samplerows,ExcelGenomePositionColumnCoordinates) for Samplerows in SampleData]
         MutationGenomeLocationList.sort()
         Samplesandmutationpoints.append(all_chromosome_mutation_locations(selected_fragment_size,MutationGenomeLocationList,chromosome_sizes))    
         #Complete=time.time()
         #print(Complete-Begin)
     return(Samplesandmutationpoints)    
 
-def non_coding_mutation_data(excelsheet,sample_list,dictA,selected_fragment_size,chromosome_sizes):#Each sample has its non coding mutation data processed and added to a giant list of all sample mutation data.
+def non_coding_mutation_data(excel_sheet,sample_list,dictionary_alpha,selected_fragment_size,chromosome_sizes):#Each sample has its non coding mutation data processed and added to a giant list of all sample mutation data.
     Samplesandmutationpoints=[]
     ExcelGenomePositionColumnCoordinates=0
-    for i in range(0,excelsheet.ncols):
-        if excelsheet.cell_value(0,i)=="MutationPosition":
+    for i in range(0,excel_sheet.ncols):
+        if excel_sheet.cell_value(0,i)=="MutationPosition":
             ExcelGenomePositionColumnCoordinates+=(int(i))
     for i in range(0,len(sample_list)):
-        SampleData=[SampleTablerowLocation for SampleTablerowLocation, Sample in dictA.items() if int(Sample)==sample_list[i]]
-        MutationGenomeLocationList=[excelsheet.cell_value(Samplerows,ExcelGenomePositionColumnCoordinates) for Samplerows in SampleData]
+        SampleData=[SampleTablerowLocation for SampleTablerowLocation, sample in dictionary_alpha.items() if int(sample)==sample_list[i]]
+        MutationGenomeLocationList=[excel_sheet.cell_value(Samplerows,ExcelGenomePositionColumnCoordinates) for Samplerows in SampleData]
         MutationGenomeLocationList.sort()
         Samplesandmutationpoints.append(all_chromosome_mutation_locations(selected_fragment_size,MutationGenomeLocationList,chromosome_sizes))   
     return(Samplesandmutationpoints)    
 
-def IndividualSamples_ExcelCodingCreator(mutation_data,sample_list,selected_fragment_size,autosome_chromsomes_fragment_names,BasePercentageColumnData,cancer_type,window_directory):# Coding sample mutation data presented into excel table with corresponding chromosome fragment location and base coverage percentages.
-    data = {"GenomeFragments":autosome_chromsomes_fragment_names,"Encoded Base Percentage":BasePercentageColumnData}
-    df = pd.DataFrame(data,index=autosome_chromsomes_fragment_names)
+def exome_mutation_frequency_dataframe_creator(mutation_data,sample_list,selected_fragment_size,autosome_chromosomes_fragment_names,fragment_bases_known,cancer_type,window_directory):# Coding sample mutation data presented into excel table with corresponding chromosome fragment location and base coverage percentages.
+    data = {"GenomeFragments":autosome_chromosomes_fragment_names,"Encoded Base Percentage":fragment_bases_known}
+    dataframe = pd.DataFrame(data,index=autosome_chromosomes_fragment_names)
 
     for i in range(0,len(sample_list),1):
         value=mutation_data[i]
-        df[str(sample_list[i])] = value 
-    df.to_excel (r""+str(window_directory)+"/Output/Cancer Genomes Mutation Frequency Distribution/"+cancer_type+"IndividualSamplesWholeGenomeFragmentMutationTable.xlsx", index = None, header=True)
-    
-def IndividualSamples_ExcelCodingAndNonCodingCreator(NonCodingMutationData,NonCodingSampleNameList,cancer_type,window_directory):#Non Coding sample mutation data and coding sample mutation data combined into new excel table.
+        dataframe[str(sample_list[i])] = value 
+    dataframe.to_excel (r""+str(window_directory)+"/Output/Cancer Genomes Mutation Frequency Distribution/"+cancer_type+"IndividualSamplesWholeGenomeFragmentMutationTable.xlsx", index = None, header=True)
+
+#This is a critical function which is responsible for joining the intron mutation frequency data 
+#with the exome mutation frequency data to create a whole genome mutation frequency data 
+#it ensures that if a sample is already present then it data is combined 
+#with the current mutation frequency score
+#If it is not present a new column is added
+
+def cancer_exome_intron_mutation_dataframe_creator(intron_mutation_frequency_data,intron_sample_ids,cancer_type,window_directory):#Non Coding sample mutation data and coding sample mutation data combined into new excel table.
     file_name='{name}/Output/Cancer Genomes Mutation Frequency Distribution/{errno}IndividualSamplesWholeGenomeFragmentMutationTable.xlsx'.format(name=window_directory, errno=cancer_type)#(r""+str(window_directory)+("/Output/")+str(cancer_type)+("IndividualSamplesExomeGenomeFragmentMutationTable.xlsx"))
-    df=pd.read_excel(io=file_name, sheet_name= "Sheet1")
-    SampleListCodingData=(df.columns.values.tolist())#list
-    for NonCodingSample in range(0,len(NonCodingSampleNameList)):
-        Individual_Sample=NonCodingSampleNameList[NonCodingSample]
+    dataframe=pd.read_excel(io=file_name, sheet_name= "Sheet1")
+    SampleListCodingData=(dataframe.columns.values.tolist())#list
+    for NonCodingSample in range(0,len(intron_sample_ids)):
+        Individual_Sample=intron_sample_ids[NonCodingSample]
         if str(Individual_Sample) in SampleListCodingData:
             for CodingSampleColumn in range(2,(len(SampleListCodingData)-2)):
                     if int(SampleListCodingData[CodingSampleColumn])== int(Individual_Sample): 
-                        for CodingSamplerow in range(0,len(df.index)):
-                            UpdatedValue=int((NonCodingMutationData[NonCodingSample])[CodingSamplerow])+int(df.iat[(CodingSamplerow),(CodingSampleColumn+2)])#Problem Code
-                            df.at[CodingSamplerow,SampleListCodingData[(CodingSampleColumn+2)]]=int(UpdatedValue)#Works correctly    
+                        for CodingSamplerow in range(0,len(dataframe.index)):
+                            UpdatedValue=int((intron_mutation_frequency_data[NonCodingSample])[CodingSamplerow])+int(dataframe.iat[(CodingSamplerow),(CodingSampleColumn+2)])#Problem Code
+                            dataframe.at[CodingSamplerow,SampleListCodingData[(CodingSampleColumn+2)]]=int(UpdatedValue)#Works correctly    
         else:
-            Newvalue=NonCodingMutationData[NonCodingSample]
-            df[str(NonCodingSampleNameList[NonCodingSample])] = Newvalue
-    df.to_excel (r""+str(window_directory)+"/Output/Cancer Genomes Mutation Frequency Distribution/"+str(cancer_type)+"IndividualSamplesWholeGenomeFragmentMutationTable.xlsx", index = None, header=True)
+            Newvalue=intron_mutation_frequency_data[NonCodingSample]
+            dataframe[str(intron_sample_ids[NonCodingSample])] = Newvalue
+    dataframe.to_excel (r""+str(window_directory)+"/Output/Cancer Genomes Mutation Frequency Distribution/"+str(cancer_type)+"IndividualSamplesWholeGenomeFragmentMutationTable.xlsx", index = None, header=True)
 
-def fragmentmean(df):
+def fragment_mean(dataframe):
     sums=0
-    for i in range(0,len(df)):
-        sums=sums+df.iat[i,2]
-    newsum=sums/(len(df))
+    for i in range(0,len(dataframe)):
+        sums=sums+dataframe.iat[i,2]
+    newsum=sums/(len(dataframe))
     return(newsum)
 
-def pattern(df,mean):
+def pattern(dataframe,mean):
     pattern_yes_no=[]
-    for i in range(0,len(df)):
-        value=df.iat[i,2]
+    for i in range(0,len(dataframe)):
+        value=dataframe.iat[i,2]
         if value <mean:
             pattern_yes_no.append(0)
         else:
             pattern_yes_no.append(1)
     return(pattern_yes_no)
-def BiomarkerList(df1):
+
+def biomarker_list(dataframe_one):
         A=[]
-        for row in range(0,len(df1)):
-            if df1.iat[row,2]==1:
-                A.append(df1.iat[row,1])
+        for row in range(0,len(dataframe_one)):
+            if dataframe_one.iat[row,2]==1:
+                A.append(dataframe_one.iat[row,1])
         return(A)
 
 def mutation_rate_list(random_dataframe):
@@ -230,62 +224,99 @@ def mutation_rate_list(random_dataframe):
             row_value_one_positions.append(random_dataframe.iat[row,0])
     return(row_value_one_positions)
 
-def Continousfragmentmean(df1):
+def continous_fragment_mean(dataframe_one):
     sums=0
-    for i in range(0,len(df1)):
-        sums=sums+Decimal(df1.iat[i,0])
-    newsum=sums/(len(df1))
+    for i in range(0,len(dataframe_one)):
+        sums=sums+Decimal(dataframe_one.iat[i,0])
+    newsum=sums/(len(dataframe_one))
     return(newsum)
 
-def Continouspattern(df1,mean):
+def continous_pattern(dataframe_one,mean):
     pattern_yes_no=[]
-    for i in range(0,len(df1)):
-        value=df1.iat[i,0]
+    for i in range(0,len(dataframe_one)):
+        value=dataframe_one.iat[i,0]
         if value <mean:
             pattern_yes_no.append(0)
         else:
             pattern_yes_no.append(1)
     return(pattern_yes_no)
 
-
-
 def mean_table(window_directory,cancer_type,iteration):
     file_name4=(r""+str(window_directory)+"/Output/BiomarkerMutationTables/"+str(cancer_type)+"BiomarkerTypeAndBiomarkerLocationMutationTableI"+str(iteration)+".xlsx")
-    df1 = pd.read_excel(io=file_name4, sheet_name= "Sheet1")
-    meangenomefragmentmutationrate=Continousfragmentmean(df1)
+    dataframe_one = pd.read_excel(io=file_name4, sheet_name= "Sheet1")
+    meangenomefragmentmutationrate=continous_fragment_mean(dataframe_one)
     Biomarkers=[]
     MutationRates=[]
-    for row in range(0,len(df1)):
-        Biomarkers.append(df1.iat[row,1])
-        MutationRates.append(df1.iat[row,0])
-    FirstData= {"MutationRate":MutationRates,"Biomarker":Biomarkers,"Pattern":Continouspattern(df1,meangenomefragmentmutationrate)}
+    for row in range(0,len(dataframe_one)):
+        Biomarkers.append(dataframe_one.iat[row,1])
+        MutationRates.append(dataframe_one.iat[row,0])
+    FirstData= {"MutationRate":MutationRates,"Biomarker":Biomarkers,"Pattern":continous_pattern(dataframe_one,meangenomefragmentmutationrate)}
     FirstDataExcelTable = pd.DataFrame(FirstData,index=MutationRates)
     FirstDataExcelTable.to_excel(r""+str(window_directory)+"/Output/BiomarkerMutationTables/"+str(cancer_type)+"BiomarkerTypeAndBiomarkerLocationMutationTableI"+str(int(iteration)+0.5)+".xlsx", index = None, header=True)
     file_name=(r""+str(window_directory)+"/Output/BiomarkerMutationTables/"+str(cancer_type)+"BiomarkerTypeAndBiomarkerLocationMutationTableI"+str(int(iteration)+0.5)+".xlsx")
     df2=pd.read_excel(io=file_name, sheet_name= "Sheet1")
 
     df2 = pd.DataFrame(FirstData,index=MutationRates)
-    NewBiomarkers=BiomarkerList(df2)
+    NewBiomarkers=biomarker_list(df2)
     NewMutationRates=mutation_rate_list(df2)
     SecondData= {"MutationRate":NewMutationRates,"Biomarker":NewBiomarkers}
     df2 = pd.DataFrame(SecondData,index=NewMutationRates)
     df2.to_excel (r""+str(window_directory)+"/Output/BiomarkerMutationTables/"+str(cancer_type)+"BiomarkerTypeAndBiomarkerLocationMutationTableI"+str(int(iteration)+1)+".xlsx", index = None, header=True)
 
+#This section of code is the running of the program 
+
+fragment_size=100000
+
+exome_data_mutation_location_column=25
+
+exome_data_sample_column=5
+
+intron_data_mutation_location_column=15
+
+intron_data_sample_column=1
+
+#  This performs the setup of the programs file structure.
+directory_creation() 
+
+# This is a list of file paths for different part of the program to save or load data
+
+path_to_program_directory=os.path.join((os.path.expanduser("~")),"Documents","Mutation_Scanner")
+
+program_directory_to_formatted_data=os.path.join(path_to_program_directory,"Input","Samples","Formatted")
+
+program_directory_to_crude_data=os.path.join(path_to_program_directory,"Input","Samples","Crude data")
+
+program_directory_to_reference_genomes=os.path.join(path_to_program_directory,"Input","Reference Genome")
+
+program_directory_to_cancer_genome_mutation_frequency=os.path.join(path_to_program_directory,"Output","Cancer Genomes Mutation Frequency Distribution")
+
+program_directory_to_cancer_biomarker_candidates=os.path.join(path_to_program_directory,"Output","Cancer Biomarker Candidates")
+
+# This function generates a list of fragment descriptors for a specified chromosome.
+# The list is used to create a table representing mutation frequency across the chromosome.
+
 selected_fragment_size=int(input("Enter genome fragment size."))
+
 print(f"{selected_fragment_size}bp selected as fragment size.")
 
 cancer_type=input("Enter Cancer you wish to process.")
-print(f"{cancer_type} selected as cancer type.")
 
+print(f"{cancer_type} selected as cancer type.")
 
 #This is a list of chromosome and the number of base pairs they have in there sequences.
 chromosome_sizes=[]   
+
 for chromosome_number in range(1,23):
+
     with open(os.path.join(program_directory_to_reference_genomes,f"Chr{chromosome_number}.fa","r")) as chromosome_file:
             chromosome_data = chromosome_file.read()
+
             formatted_chromosome_data=re.sub("\n","",chromosome_data)
+
             if chromosome_number<10:
+
                 chromosome_sizes.append(len(formatted_chromosome_data[5:]))
+
             else:
                 chromosome_sizes.append(len(formatted_chromosome_data[6:]))
 
@@ -293,198 +324,215 @@ print("1.Chromosome Sizes Calculated.This took ")
 
 # These are lists,sets and variable used to store cancer patient sample information, cancer patient mutation information, row position,
 # and a unique set of pairs of sample and mutation data.
-sample_id_coding=[]
-mutation_genome_positions_coding=[]
-row_number_coding=0
-mutation_sample_unique_pairs_coding=set()
+exome_samples=[]
+
+exome_mutation_genome_positions=[]
+
+exome_row_counter=0
+
+exome_mutation_sample_unique_pairs=set()
 
 # Open a cancer mutation file and place its data in a variable called CSV FileC
 #The function below would be the same as coding file would be the same as non coding, the reason it not because the dataframe has a different structure
-with open(os.path.join(program_directory_to_samples,"Crude data",f"{cancer_type}_Coding.csv"),"r") as cancer_mutation_coding_data:
+with open(os.path.join(program_directory_to_crude_data,f"{cancer_type}_Coding.csv"),"r") as exome_cancer_mutation__data:
     #This open the cancer types mutation file as a csv file
-    csv_cancer_mutation_data=csv.reader(cancer_mutation_coding_data)
+    csv_exome_cancer_mutation_data=csv.reader(exome_cancer_mutation__data)
     # This is a for loop which will iterate through all rows present in the csv file
-    for row in csv_cancer_mutation_data:
+    for row in csv_exome_cancer_mutation_data:
 
         #Skips the first row, as this contains the columns titles.
-        if row_number_coding==0:
-            row_number_coding+=1
+        if exome_row_counter==0:
+            exome_row_counter+=1
         else:
             #If the mutation data in a row is missing then it is skipped.
-            if row[25]=="null":
+            if row[exome_data_mutation_location_column]=="null":
                 continue
             else:
                 #Selects columns 6 and columns 26 of each row in the table and prevents duplicate mutations in the same sample.
-                if (str(row[5])+str(row[25])) not in mutation_sample_unique_pairs_coding:
+                if (str(row[exome_data_sample_column])+str(row[exome_data_mutation_location_column])) not in exome_mutation_sample_unique_pairs:
 
                     # Each row represents a specific mutation identified within a particular patient cancer tissue sample
-                    # The rows patient sample number is added to a list called sample_id_coding 
-                    sample_id_coding.append(row[5])
-                    #The rows mutation is added to a list called mutation_genome_positions_coding
-                    mutation_genome_positions_coding.append(row[25])
+                    # The rows patient sample number is added to a list called exome_samples 
+                    exome_samples.append(row[exome_data_sample_column])
+                    #The rows mutation is added to a list called exome_mutation_genome_positions
+                    exome_mutation_genome_positions.append(row[exome_data_mutation_location_column])
                     #The specific mutation patient pair is added to a set of unique pairs to prevent duplicates being added.
-                    mutation_sample_unique_pairs_coding.add(str(row[5])+str(row[25]))
+                    exome_mutation_sample_unique_pairs.add(str(row[exome_data_sample_column])+str(row[exome_data_mutation_location_column]))
 
-# This variable number_of_files_coding is a number which represents the number of samples divided by one million
-number_of_files_coding=((len(sample_id_coding))/(1000000))
-#Using the above variable undergo a for loop in range of the number_of_files_coding variable rounded up. 
-#This process will split up the large cancer file into subsequent small files which can be processed.
-for IterationC in range(0,math.ceil(number_of_files_coding)):
-    XC=(1000000*IterationC)
-    YC=(1000000*(IterationC+1))
+#This determines the number of times an exome file has to be split for all data to be viewable in excel 
+number_of_cancer_exome_mutation_chunks=math.ceil((len(exome_samples))/(fragment_size))
+
+#This process splits up the large exome cancer file into  smaller exome files which can be viewed.
+for data_chunk_index in range(0,number_of_cancer_exome_mutation_chunks):
+
+    initial_base_position=(fragment_size*data_chunk_index)
+
+    end_base_position=(fragment_size*(data_chunk_index+1))
+
     #Creates a dictionary called file_data. 
-    file_data= {"SampleId":sample_id_coding[XC:YC],"MutationPosition":mutation_genome_positions_coding[XC:YC]}
+    exome_file_data= {"sample Id":exome_samples[initial_base_position:end_base_position],"Mutation Position":exome_mutation_genome_positions[initial_base_position:end_base_position]}
+
     # Dictionary file_data used to make a dataframe
-    DFC=pd.DataFrame(file_data,index=(sample_id_coding[XC:YC]))
-    DFC.to_excel((r""+str(window_directory)+"/Input/Samples/SmallFiles/"+str(cancer_type)+"_Coding_Sub"+str(IterationC+1)+".xlsx"), index = None, header=True)
+    exome_mutation_chunk_dataframe=pd.DataFrame(exome_file_data,index=(exome_samples[initial_base_position:end_base_position]))
+    
+    exome_chunks_file_save_name=f"{cancer_type} cancer exome data chunk {data_chunk_index}.xlsx "
 
+    exome_chunk_file_path=os.path.join(program_directory_to_formatted_data,exome_chunks_file_save_name)
 
-#(str(window_directory)+"/Input/Samples/"+(str(cancer_type)+"_Non_Coding.csv))
-SampleIdNC=[]
-MutationPositionNC=[]
-rowCounterNC=0 
-DuplicantFreeNC=set()
+    exome_mutation_chunk_dataframe.to_excel(exome_chunk_file_path, index = None, header=True)
 
-with open (r""+str(window_directory)+"/Input/Samples/Crude data/"+(str(cancer_type)+"_Non_Coding.csv")) as InformationNC:
-    CSV_FileNC=csv.reader(InformationNC,delimiter=",")
-    for row in CSV_FileNC:
-        if rowCounterNC==0:
-            rowCounterNC+=1
+intron_samples=[]
+
+intron_mutation_genome_positions=[]
+
+intron_row_counter=0 
+
+intron_mutation_sample_unique_pairs=set()
+
+with open (os.path.join(program_directory_to_crude_data,f"{cancer_type}_Non_Coding.csv"),"r") as intron_cancer_mutation__data:
+    
+    csv_intron_cancer_mutation_data=csv.reader(intron_cancer_mutation__data)
+
+    for row in csv_intron_cancer_mutation_data:
+        if intron_row_counter==0:
+            intron_row_counter+=1
         else:
-            if row[15]=="null":
+            if row[intron_data_mutation_location_column]=="null":
                 continue
             else:
-                if (str(row[1])+str(row[15])) not in DuplicantFreeNC:
-                    SampleIdNC.append(row[1])
-                    MutationPositionNC.append(row[15])
-                    DuplicantFreeNC.add(str(row[1])+str(row[15]))
+                if (str(row[intron_data_sample_column])+str(row[intron_data_mutation_location_column])) not in intron_mutation_sample_unique_pairs:
 
-NolistsNC=((len(SampleIdNC))/(1000000))
+                    intron_samples.append(row[intron_data_sample_column])
 
-for IterationNC in range(0,math.ceil(NolistsNC)):#round(Nolists)+1)):
-    XNC=(1000000*IterationNC)
-    YNC=(1000000*(IterationNC+1))
-    FileDataNC= {"SampleId":SampleIdNC[XNC:YNC],"MutationPosition":MutationPositionNC[XNC:YNC]}
-    DFNC=pd.DataFrame(FileDataNC,index=(SampleIdNC[XNC:YNC]))
-    DFNC.to_excel((r""+str(window_directory)+"/Input/Samples/SmallFiles/"+(str(cancer_type)+"_Non_Coding_Sub"+str(IterationNC+1)+".xlsx")), index = None, header=True)
-print("2.data processed into accessible excel files.This took "+str(time.time()-StartTime)+" Seconds.")
+                    intron_mutation_genome_positions.append(row[intron_data_mutation_location_column])
+
+                    intron_mutation_sample_unique_pairs.add(str(row[intron_data_sample_column])+str(row[intron_data_mutation_location_column]))
+
+number_of_cancer_intron_mutation_chunks=math.ceil((len(intron_samples))/(fragment_size))
+
+for data_chunk_index in range(0,number_of_cancer_intron_mutation_chunks):
+
+    initial_base_position=(fragment_size*data_chunk_index)
+
+    end_base_position=(fragment_size*(data_chunk_index+1))
+
+    intron_file_Data= {"sample Id":intron_samples[initial_base_position:end_base_position],"Mutation Position":intron_mutation_genome_positions[initial_base_position:end_base_position]}
+
+    intron_mutation_chunk_dataframe=pd.DataFrame(intron_file_Data,index=(intron_samples[initial_base_position:end_base_position]))
+
+    intron_chunk_file_save_name=f"{cancer_type} cancer intron data chunk {data_chunk_index}.xlsx "
+
+    intron_chunk_file_path=os.path.join(program_directory_to_crude_data,intron_chunk_file_save_name)
+    
+    intron_mutation_chunk_dataframe.to_excel(program_directory_to_formatted_data, index = None, header=True)
+
+print("2.data processed into accessible excel files.")
 
 #Looks through all files in the directory location listed and counts the number of files
-names_of_formated_mutation_files=([x[2] for x in os.walk(r""+str(window_directory)+"/Input/Samples/SmallFiles/")])[0]
+
+names_of_formated_mutation_files=([x[2] for x in os.walk(program_directory_to_formatted_data)])[0]
+
 number_of_processed_coding_files=0
+
 for file_name in names_of_formated_mutation_files:
-    if str(cancer_type+"_Coding_Sub") in file_name:
+
+    if f"{cancer_type} cancer exome data chunk" in file_name:
+
         number_of_processed_coding_files+=1
 
 number_of_processed_non_coding_files=0
-for file_name in names_of_formated_mutation_files:
-    if str(cancer_type+"_Non_Coding_Sub") in file_name:
-        number_of_processed_non_coding_files+=1
 
+for file_name in names_of_formated_mutation_files:
+
+    if f"{cancer_type} cancer intron data chunk" in file_name:
+
+        number_of_processed_non_coding_files+=1
         
-totalsamples=len(SampleIdNC)+len(sample_id_coding)
-if(totalsamples)>16380:
-    print("Sheet Size not large enough.")
-else:
-    print("Sheet size large enough.")
-for i in range(0,number_of_processed_coding_files):
-    if i ==0:
-        CancerCodingSampleData=((str(window_directory)+"/Input/Samples/SmallFiles/"+(str(cancer_type)+"_Coding_Sub1.xlsx")))
-        CWB=xlrd.open_workbook(CancerCodingSampleData) #This opens the coding mutation data excel file.
-        CodingExcelSheet=CWB.sheet_by_index(0) 
-        CodingExcelSheet.cell_value(0, 0) 
-        
-        print("3.Coding Excel Input File opened and Cordinates for Column containing ID_SAMPLE discovered.This took "+str(time.time()-StartTime)+" Seconds.")     
-        SamplesWithDuplicates=[CodingExcelSheet.cell_value(i,0) for i in range(1,CodingExcelSheet.nrows)] #This is a list containing coding sample duplicates, it does this by adding each row value underneath the column sample id.
-        print("List of Coding samples containing duplicates created.This took "+str(time.time()-StartTime)+" Seconds.")
-        SampleListC=[]#Might be able to use a list comprehension to shorten this code.
-        for Sample in SamplesWithDuplicates:
-            if int(Sample) not in SampleListC:
-                SampleListC.append(int(Sample))
-        
-        print("4.List of Coding samples without duplicates created.This took "+str(time.time()-StartTime)+" Seconds.")
-        DictCSamplerows={}#CodingDictionary ,This is a dictionary of Coding Sample with there row excel locations.
-        CounterC=1    
-        for Sample in SamplesWithDuplicates:
-            DictCSamplerows.update({CounterC:int(Sample)})
-            CounterC=CounterC+1
-        print("5.Dictionary of Coding samples with corresponding row coordinates created.This took "+str(time.time()-StartTime)+" Seconds.")    
-        
-        all_chromosome_fragments=genome_multi_chromosome_fragment_generator(selected_fragment_size)#This generates a list of all genome fragments.
-        print("6.Completed genome fragment list generation.This took"+str(time.time()-StartTime)+"Seconds.")
-        fragment_sequence_percentage=all_chromosomes_fragments_base_coverage(window_directory,selected_fragment_size)#This generates a list of all genome fragments base coverage.
-        print("7.Completed chromosomes fragments base coverage percentage list.This took "+str(time.time()-StartTime)+" Seconds.")
-        
-        CodingData=coding_mutation_data(CodingExcelSheet,SampleListC,DictCSamplerows,selected_fragment_size,chromosome_sizes)#This is the coding mutation data ready to be added to a dataframe.
-        print("8.Completed creation of Coding data.This took "+str(time.time()-StartTime)+" Seconds.")
-        IndividualSamples_ExcelCodingCreator(CodingData,SampleListC,selected_fragment_size,all_chromosome_fragments,fragment_sequence_percentage,cancer_type,window_directory)#This processes the coding mutation data into a dataframe.
-    else:
-        #input Samples small files
-        CancerNonCodingSampleData=((str(window_directory)+"/Input/Samples/SmallFiles/"+(str(cancer_type)+"_Coding_Sub"+str(i+1)+".xlsx")))
-        NCWB=xlrd.open_workbook(CancerNonCodingSampleData) #This opens the coding mutation data excel file.
-        NonCodingExcelSheet=NCWB.sheet_by_index(0) 
-        NonCodingExcelSheet.cell_value(0, 0) 
-        ExcelSampleIdColumnNC=0#This value equals the Non Coding excel table location of the column ID sample, the below code is how it is discovered.
-        for i in range(0,NonCodingExcelSheet.ncols):
-            if NonCodingExcelSheet.cell_value(0,i)=="SampleId":
-                ExcelSampleIdColumnNC+=(int(i))
-        print("10.Non Coding Excel Input file opened, and Coordinates for Column containing ID_Sample discovered.This took "+str(time.time()-StartTime)+" Seconds.")     
-        SamplesWithDuplicatesNC=[NonCodingExcelSheet.cell_value(i,ExcelSampleIdColumnNC) for i in range(1,NonCodingExcelSheet.nrows)]#This is a list containing Non Coding sample duplicates, it does this by adding each row value underneath the column sample id.
-        print("11.List of Non Coding samples containing duplicates created.This took "+str(time.time()-StartTime)+" Seconds.")
-        SampleListNCD=set()#Might be able to use a list comprehension to shorten this code.
-        for Sample in SamplesWithDuplicatesNC:
-            if Sample not in SampleListNCD:
-                SampleListNCD.add(int(Sample))
-        SampleListNC=[]
-        for a in SampleListNCD:
-            SampleListNC.append(int(a))
-        print("12.List of Non Coding samples without duplicates created.This took "+str(time.time()-StartTime)+" Seconds.")
-        DictNCSamplerows={}#NonCoding Dictionary ,This is a dictionary of Non Coding Sample with there row excel locations.
-        CounterNC=1    
-        for Sample in SamplesWithDuplicatesNC:
-            DictNCSamplerows.update({CounterNC:int(Sample)})
-            CounterNC=CounterNC+1
-        print("13.Dictionary of Non Coding samples with corresponding row coordinates created.This took "+str(time.time()-StartTime)+" Seconds.")       
-        NonCodingData=non_coding_mutation_data(NonCodingExcelSheet,SampleListNC,DictNCSamplerows,selected_fragment_size,chromosome_sizes)#This is the non coding mutation data ready to be added to a dataframe.
-        print("14.Completed creation of Non Coding data.This took "+str(time.time()-StartTime)+" Seconds.")
-        IndividualSamples_ExcelCodingAndNonCodingCreator(NonCodingData,SampleListNC,cancer_type,window_directory)
-    print("Processed coding files")
-for i in range(0,number_of_processed_coding_files):
+#Commence Refactoring
+for data_chunk_index in range(0,number_of_processed_coding_files):
+
+    file_of_interest=f"{cancer_type} cancer exome data chunk {data_chunk_index}.xlsx "
+
+    file_path=os.path.join(program_directory_to_formatted_data,file_of_interest)
+
+    #This opens the coding mutation data excel file.
+    exome_mutation_file_data=xlrd.open_workbook(file_path) 
+
+    exome_mutation_file_data=exome_mutation_file_data.sheet_by_index(0) 
+    
+    print("3.Coding Excel Input File opened and Cordinates for Column containing ID_SAMPLE discovered.")     
+   
+    #This is a list containing coding sample duplicates, it does this by adding each row value 
+    # underneath the column sample id.
+    exome_cancer_cohort_samples_with_repeats=[exome_mutation_file_data.cell_value(i,0) for i in range(1,exome_mutation_file_data.nrows)] 
+    
+    print("List of Coding samples containing duplicates created.")
+    
+    # Using a set to get unique samples and then converting back to a list
+    exome_cancer_cohort_samples = list(set(int(sample) for sample in exome_cancer_cohort_samples_with_repeats))
+    
+    print("4.List of Coding samples without duplicates created.")
+    
+    exome_sample_dataframe_positions = {i+1: int(sample) for i, sample in enumerate(exome_cancer_cohort_samples_with_repeats)}
+
+    print("5.Dictionary of Coding samples with corresponding row coordinates created.")    
+    
+    all_chromosome_fragments=genome_multi_chromosome_fragment_generator(selected_fragment_size)#This generates a list of all genome fragments.
+    
+    print("6.Completed genome fragment list generation.")
+    
+    fragment_sequence_percentage=all_chromosomes_fragments_base_coverage(window_directory,selected_fragment_size)#This generates a list of all genome fragments base coverage.
+    
+    print("7.Completed chromosomes fragments base coverage percentage list.")
+    
+    exome_fragment_mutation_frequency_data=coding_mutation_data(exome_mutation_file_data,exome_cancer_cohort_samples,exome_sample_dataframe_positions,selected_fragment_size,chromosome_sizes)#This is the coding mutation data ready to be added to a dataframe.
+    
+    print("8.Completed creation of Coding data.")
+    
+    exome_mutation_frequency_dataframe_creator(exome_fragment_mutation_frequency_data,exome_cancer_cohort_samples,selected_fragment_size,all_chromosome_fragments,fragment_sequence_percentage,cancer_type,window_directory)#This processes the coding mutation data into a dataframe.
+    
+
+# Complete work on a file within a directory which has non coding mutation data for a cohort.
+
+for data_chunk_index in range(0,number_of_processed_coding_files):
 
     # input file
-    CancerNonCodingSampleData=((str(window_directory)+"/Input/Samples/SmallFiles/"+(str(cancer_type)+"_Non_Coding_Sub"+str(i+1)+".xlsx")))
-    NCWB=xlrd.open_workbook(CancerNonCodingSampleData) #This opens the coding mutation data excel file.
-    NonCodingExcelSheet=NCWB.sheet_by_index(0) 
-    NonCodingExcelSheet.cell_value(0, 0) 
-    ExcelSampleIdColumnNC=0#This value equals the Non Coding excel table location of the column ID sample, the below code is how it is discovered.
-    for i in range(0,NonCodingExcelSheet.ncols):
-        if NonCodingExcelSheet.cell_value(0,i)=="SampleId":
-            ExcelSampleIdColumnNC+=(int(i))
-    print("10.Non Coding Excel Input file opened, and Coordinates for Column containing ID_Sample discovered.This took "+str(time.time()-StartTime)+" Seconds.")     
-    SamplesWithDuplicatesNC=[NonCodingExcelSheet.cell_value(i,ExcelSampleIdColumnNC) for i in range(1,NonCodingExcelSheet.nrows)]#This is a list containing Non Coding sample duplicates, it does this by adding each row value underneath the column sample id.
-    print("11.List of Non Coding samples containing duplicates created.This took "+str(time.time()-StartTime)+" Seconds.")
-    SampleListNCD=set()#Might be able to use a list comprehension to shorten this code.
-    for Sample in SamplesWithDuplicatesNC:
-        if Sample not in SampleListNCD:
-            SampleListNCD.add(int(Sample))
-    SampleListNC=[]
-    for a in SampleListNCD:
-        SampleListNC.append(int(a))
-    print("12.List of Non Coding samples without duplicates created.This took "+str(time.time()-StartTime)+" Seconds.")
-    DictNCSamplerows={}#NonCoding Dictionary ,This is a dictionary of Non Coding Sample with there row excel locations.
-    CounterNC=1    
-    for Sample in SamplesWithDuplicatesNC:
-        DictNCSamplerows.update({CounterNC:int(Sample)})
-        CounterNC=CounterNC+1
-    print("13.Dictionary of Non Coding samples with corresponding row coordinates created.This took "+str(time.time()-StartTime)+" Seconds.")       
-    NonCodingData=non_coding_mutation_data(NonCodingExcelSheet,SampleListNC,DictNCSamplerows,selected_fragment_size,chromosome_sizes)#This is the non coding mutation data ready to be added to a dataframe.
-    print("14.Completed creation of Non Coding data.This took "+str(time.time()-StartTime)+" Seconds.")
-    IndividualSamples_ExcelCodingAndNonCodingCreator(NonCodingData,SampleListNC,cancer_type,window_directory)#This processes the coding and non coding mutation data into a dataframe.
-print("15.Completed creation of Coding and Non Coding Excel Sample data File.This took "+str(time.time()-StartTime)+" Seconds.")
+    file_of_interest=f"{cancer_type} cancer intron data chunk {data_chunk_index}.xlsx"
+    
+    file_path=os.path.join(program_directory_to_formatted_data,file_of_interest)
+
+    intron_mutation_file_data=xlrd.open_workbook(file_path) #This opens the coding mutation data excel file.
+    
+    intron_mutation_file_data=intron_mutation_file_data.sheet_by_index(0) 
+   
+    intron_mutation_file_data.cell_value(0, 0) 
+
+    print("10.Non Coding Excel Input file opened, and Coordinates for Column containing ID_Sample discovered.")     
+    
+    #This is a list containing Non Coding sample duplicates, it does this by adding each row value underneath the column sample id.
+    intron_cancer_cohort_samples_with_repeats=[intron_mutation_file_data.cell_value(data_chunk_index,0) for data_chunk_index in range(1,intron_mutation_file_data.nrows)]
+    
+    print("11.List of Non Coding samples containing duplicates created.")
+    
+    # Directly convert the list with potential repeats to a set to get unique values.
+    intron_cancer_cohort_samples = list(set(map(int, intron_cancer_cohort_samples_with_repeats)))
+
+    print("12.List of Non Coding samples without duplicates created.")
+    
+    intron_sample_dataframe_positions = {i+1: int(sample) for i, sample in enumerate(intron_cancer_cohort_samples_with_repeats)}
+
+    print("13.Dictionary of Non Coding samples with corresponding row coordinates created.")       
+    
+    intron_fragment_mutation_frequency_data=non_coding_mutation_data(intron_mutation_file_data,SampleListNC,intron_sample_dataframe_positions,selected_fragment_size,chromosome_sizes)#This is the non coding mutation data ready to be added to a dataframe.
+    
+    print("14.Completed creation of Non Coding data.")
+    
+    #This critical stage combines exome and intron data to truly understand mutation frequency hotspots 
+    #for certain types of cancer
+    cancer_exome_intron_mutation_dataframe_creator(intron_fragment_mutation_frequency_data,SampleListNC,cancer_type,window_directory)#This processes the coding and non coding mutation data into a dataframe.
 
 
-
-
+print("15.Completed creation of Coding and Non Coding Excel sample data File.")
 
 
 print("16.Commencing sample mutation average excel file creation.")
@@ -528,7 +576,7 @@ file_path=os.path.join(program_directory_to_cancer_genome_mutation_frequency,fil
 
 cancer_cohort_average_mutation_frequency_distribution_dataframe.to_excel (file_path, index = None, header=True) 
 
-print("17.Completed Creation of Mean Sample Whole Genome Fragment Mutation Rate Excel Table.This took "+str(time.time()-StartTime)+" Seconds.")
+print("17.Completed Creation of Mean sample Whole Genome Fragment Mutation Rate Excel Table.")
 
 print("18.Biomarker Addition beginning.")
 
@@ -541,35 +589,35 @@ blood_protein_genomic_file_data = pd.read_excel(blood_protein_genomic_file, shee
 ordered_proteins_by_fragment_range = []
 
 # Loop through each fragment in the average mutation frequency dataframe
-for fragment in range(0, len(average_mutation_frequency_dataframe)):
+for fragment in range(0, len(cancer_cohort_average_mutation_frequency_distribution_dataframe )):
     # Extract chromosome number, start position, and end position from the fragment
-    chromosome_number = int((re.search('Chromosome(.*)Fragment', average_mutation_frequency_dataframe.iat[fragment, 0])).group(1))
+    chromosome_number = int((re.search('Chromosome(.*)Fragment', cancer_cohort_average_mutation_frequency_distribution_dataframe .iat[fragment, 0])).group(1))
 
-    start_position = int((re.search('Basepairs(.*)-', average_mutation_frequency_dataframe.iat[fragment, 0])).group(1))
+    start_position = int((re.search('Basepairs(.*)-', cancer_cohort_average_mutation_frequency_distribution_dataframe .iat[fragment, 0])).group(1))
 
-    end_position = int((re.search('-(.*)', average_mutation_frequency_dataframe.iat[fragment, 0])).group(1))
+    end_position = int((re.search('-(.*)', cancer_cohort_average_mutation_frequency_distribution_dataframe .iat[fragment, 0])).group(1))
     
     # Initialize an empty list to hold proteins found in the current fragment's genomic location
     proteins_in_fragment_genomic_location = []
     
     # Define the condition for selecting proteins that lie within the current fragment
-    condition = (blood_protein_genomic_data['Genomic Position'] >= start_position) & \
-                (blood_protein_genomic_data['Genomic Position'] <= end_position) & \
-                (blood_protein_genomic_data['Chromosome'] == int(chromosome_number))
+    condition = (blood_protein_genomic_file_data['Genomic Position'] >= start_position) & \
+                (blood_protein_genomic_file_data['Genomic Position'] <= end_position) & \
+                (blood_protein_genomic_file_data['Chromosome'] == int(chromosome_number))
     
     # Extract the names of proteins that satisfy the condition
-    proteins_in_fragment = blood_protein_genomic_data.loc[condition, 'Protein Name'].tolist()
+    proteins_in_fragment = blood_protein_genomic_file_data.loc[condition, 'Protein Name'].tolist()
     
     # Append the list of proteins found in the current fragment to the ordered list
     ordered_proteins_by_fragment_range.append(proteins_in_fragment)
 
 # Add the ordered list of proteins as a new column in the average mutation frequency dataframe
-average_mutation_frequency_dataframe["Blood soluble proteins coded in fragment"] = ordered_proteins_by_fragment_range
+cancer_cohort_average_mutation_frequency_distribution_dataframe ["Blood soluble proteins coded in fragment"] = ordered_proteins_by_fragment_range
 
-# Calculate the mean using the fragmentmean function
-mean = fragmentmean(average_mutation_frequency_dataframe)
+# Calculate the mean using the fragment_mean function
+mean = fragment_mean(cancer_cohort_average_mutation_frequency_distribution_dataframe )
 
-average_mutation_frequency_dataframe["pattern_yes_no"]=pattern(average_mutation_frequency_dataframe,mean)
+cancer_cohort_average_mutation_frequency_distribution_dataframe ["pattern_yes_no"]=pattern(cancer_cohort_average_mutation_frequency_distribution_dataframe ,mean)
 
 # Creating appropriate filename
 excel_filename=f"AvgMutFreq_{cancer_type}_BloodSolProtein.xlsx"
@@ -578,7 +626,7 @@ excel_filename=f"AvgMutFreq_{cancer_type}_BloodSolProtein.xlsx"
 output_path=os.path.join(program_directory_to_cancer_biomarker_candidates,excel_filename)
                          
 # Save the DataFrame to Excel
-average_mutation_frequency_dataframe.to_excel(output_path, index = None, header=True)
+cancer_cohort_average_mutation_frequency_distribution_dataframe .to_excel(output_path, index = None, header=True)
 
 # Read the previously saved DataFrame containing average mutation frequencies and blood proteins
 avg_mut_freq_blood_sol_protein_file = output_path
