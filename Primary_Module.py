@@ -141,7 +141,7 @@ def dictionary_to_list(chromosome_dictionary):
 #Creates a list from the previous dictionary containing number of mutations per specific chromosome mutation fragment list 
 def all_chromosome_mutation_locations(selected_fragment_size,original_mutation_data,chromosome_sizes):
     
-    AllChromosomeFragmentMutationList=[]
+    all_chromosome_fragments_mutation_data=[]
     
     for chromosome_number in range(1,23,1):
         
@@ -149,9 +149,9 @@ def all_chromosome_mutation_locations(selected_fragment_size,original_mutation_d
         
         AllChromosomeFragmentMutationDictionary=dictionary_of_fragment_mutation(selected_fragment_size,formatted_mutation_data,chromosome_number,chromosome_sizes) 
         
-        AllChromosomeFragmentMutationList+=(dictionary_to_list(AllChromosomeFragmentMutationDictionary))
+        all_chromosome_fragments_mutation_data+=(dictionary_to_list(AllChromosomeFragmentMutationDictionary))
     
-    return(AllChromosomeFragmentMutationList)    
+    return(all_chromosome_fragments_mutation_data)    
    
 def coding_mutation_data(excel_sheet,sample_list,dictionary_alpha,selected_fragment_size,chromosome_sizes):#Each sample has its coding mutation data processed and added to a giant list of all sample mutation data.
     
