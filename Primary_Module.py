@@ -137,22 +137,38 @@ def dictionary_to_list(chromosome_dictionary):
 
     return(chromosome_list)
 
-#Determines the number of mutation found within a chromosome fragment location, assigning this mapping to a dictionary,
-#Creates a list from the previous dictionary containing number of mutations per specific chromosome mutation fragment list 
-def all_chromosome_mutation_locations(selected_fragment_size,original_mutation_data,chromosome_sizes):
+
+def all_chromosome_mutation_locations(selected_fragment_size, original_mutation_data, chromosome_sizes):
+    """
+    Calculate mutation locations for all chromosomes based on selected fragment size.
     
-    all_chromosome_fragments_mutation_data=[]
+    Parameters:
+    - selected_fragment_size: Size of each fragment for which mutations are to be determined.
+    - original_mutation_data: Original data containing mutation information.
+    - chromosome_sizes: Dictionary or list containing sizes of each chromosome.
     
-    for chromosome_number in range(1,23,1):
-        
-        formatted_mutation_data=extract_mutation_positions(chromosome_number,original_mutation_data)
-        
-        AllChromosomeFragmentMutationDictionary=dictionary_of_fragment_mutation(selected_fragment_size,formatted_mutation_data,chromosome_number,chromosome_sizes) 
-        
-        all_chromosome_fragments_mutation_data+=(dictionary_to_list(AllChromosomeFragmentMutationDictionary))
+    Returns:
+    - A list containing mutation data for all chromosome fragments.
+    """
     
-    return(all_chromosome_fragments_mutation_data)    
-   
+    # Initialize an empty list to store mutation data for all chromosome fragments.
+    all_chromosome_fragments_mutation_data = []
+    
+    # Iterate over all 22 chromosomes.
+    for chromosome_number in range(1, 23):
+        
+        # Extract mutation positions for the current chromosome from the original data.
+        formatted_mutation_data = extract_mutation_positions(chromosome_number, original_mutation_data)
+        
+        # Generate a dictionary containing fragment mutation data for the current chromosome.
+        AllChromosomeFragmentMutationDictionary = dictionary_of_fragment_mutation(selected_fragment_size, formatted_mutation_data, chromosome_number, chromosome_sizes)
+        
+        # Convert the dictionary to a list and append it to the main list.
+        all_chromosome_fragments_mutation_data += (dictionary_to_list(AllChromosomeFragmentMutationDictionary))
+    
+    # Return the combined list of mutation data for all chromosome fragments.
+    return all_chromosome_fragments_mutation_data
+
 def coding_mutation_data(excel_sheet,sample_list,dictionary_alpha,selected_fragment_size,chromosome_sizes):#Each sample has its coding mutation data processed and added to a giant list of all sample mutation data.
     
     Samplesandmutationpoints=[]
