@@ -8,7 +8,11 @@ import re
 import math
 import os 
 
-def chromosome_fasta_sequence(chromosome,program_file_location): 
+path_to_program_directory=os.path.join((os.path.expanduser("~")),"Documents","Mutation_Scanner")
+
+program_directory_to_reference_genomes=os.path.join(path_to_program_directory,"Input","Reference Genome")
+
+def chromosome_fasta_sequence(chromosome): 
     """
     This program simply converts a fasta file into a string,
     with each character representing a base of the chromosome of interest.
@@ -20,7 +24,8 @@ def chromosome_fasta_sequence(chromosome,program_file_location):
         with open(file_path,"r") as chromosome_fasta_file:
             chromosome_data = chromosome_fasta_file.read()
             # Remove the header line (if present)
-            chromosome_data_formatted=chromosome_data.replace(">chr{}".format(str(chromosome),""))
+            chromosome_data_formatted = chromosome_data.replace(">chr{}".format(str(chromosome)), "")
+
             # Remove newline characters                                   
             chromosome_data_formatted=re.sub("\n","",chromosome_data_formatted)
         return chromosome_data_formatted
