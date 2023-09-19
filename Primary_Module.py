@@ -11,6 +11,7 @@ from Tertiary_Module import directory_creation
 from decimal import *
 from Secondary_Module import all_chromosomes_fragments_base_coverage
 import xlrd
+import Decimal as decimal
 
 #Below is a list of all functions
 def chromosome_number_fragment_list(desired_fragment_size, chromosome_number):
@@ -137,11 +138,9 @@ def dictionary_to_list(chromosome_dictionary):
 
     return(chromosome_list)
 
-
+#Calculate mutation locations for all chromosomes based on selected fragment size.
 def all_chromosome_mutation_locations(selected_fragment_size, original_mutation_data, chromosome_sizes):
     """
-    Calculate mutation locations for all chromosomes based on selected fragment size.
-    
     Parameters:
     - selected_fragment_size: Size of each fragment for which mutations are to be determined.
     - original_mutation_data: Original data containing mutation information.
@@ -219,7 +218,7 @@ def non_coding_mutation_data(excel_sheet,sample_list,dictionary_alpha,selected_f
     
     return(Samplesandmutationpoints)    
 
-def exome_mutation_frequency_dataframe_creator(mutation_data,sample_list,selected_fragment_size,autosome_chromosomes_fragment_names,fragment_bases_known,cancer_type,window_directory):# Coding sample mutation data presented into excel table with corresponding chromosome fragment location and base coverage percentages.
+def exome_mutation_frequency_dataframe_creator(mutation_data,sample_list,selected_fragment_size,autosome_chromosomes_fragment_names,fragment_bases_known,cancer_type):# Coding sample mutation data presented into excel table with corresponding chromosome fragment location and base coverage percentages.
     
     data = {"GenomeFragments":autosome_chromosomes_fragment_names,"Encoded Base Percentage":fragment_bases_known}
     
@@ -231,7 +230,11 @@ def exome_mutation_frequency_dataframe_creator(mutation_data,sample_list,selecte
 
         dataframe[str(sample_list[i])] = value 
 
-    dataframe.to_excel (r""+str(window_directory)+"/Output/Cancer Genomes Mutation Frequency Distribution/"+cancer_type+"IndividualSamplesWholeGenomeFragmentMutationTable.xlsx", index = None, header=True)
+    file_name=f"{cancer_type} Individual Samples Exome Mutation Frequency.xlsx"
+
+    file_path=os.path.join(program_directory_to_cancer_genome_mutation_frequency,file_name)
+
+    dataframe.to_excel (os.path.join(file_path), index = None, header=True)
 
 #This is a critical function which is responsible for joining the intron mutation frequency data 
 #with the exome mutation frequency data to create a whole genome mutation frequency data 
@@ -239,11 +242,13 @@ def exome_mutation_frequency_dataframe_creator(mutation_data,sample_list,selecte
 #with the current mutation frequency score
 #If it is not present a new column is added
 
-def cancer_exome_intron_mutation_dataframe_creator(intron_mutation_frequency_data,intron_sample_ids,cancer_type,window_directory):#Non Coding sample mutation data and coding sample mutation data combined into new excel table.
+def cancer_exome_intron_mutation_dataframe_creator(intron_mutation_frequency_data,intron_sample_ids,cancer_type):#Non Coding sample mutation data and coding sample mutation data combined into new excel table.
     
-    file_name='{name}/Output/Cancer Genomes Mutation Frequency Distribution/{errno}IndividualSamplesWholeGenomeFragmentMutationTable.xlsx'.format(name=window_directory, errno=cancer_type)#(r""+str(window_directory)+("/Output/")+str(cancer_type)+("IndividualSamplesExomeGenomeFragmentMutationTable.xlsx"))
+    file_name=f"{cancer_type} Individual Samples Exome Mutation Frequency.xlsx"
+
+    file_path=os.path.join(program_directory_to_cancer_genome_mutation_frequency,file_name)
     
-    dataframe=pd.read_excel(io=file_name, sheet_name= "Sheet1")
+    dataframe=pd.read_excel(file_path, sheet_name= "Sheet1")
 
     SampleListCodingData=(dataframe.columns.values.tolist())
 
@@ -269,7 +274,11 @@ def cancer_exome_intron_mutation_dataframe_creator(intron_mutation_frequency_dat
 
             dataframe[str(intron_sample_ids[NonCodingSample])] = Newvalue
 
-    dataframe.to_excel (r""+str(window_directory)+"/Output/Cancer Genomes Mutation Frequency Distribution/"+str(cancer_type)+"IndividualSamplesWholeGenomeFragmentMutationTable.xlsx", index = None, header=True)
+    file_name=f"{cancer_type} Individual Samples Whole Genome Mutation Frequency Distribution.xlsx"
+
+    file_path=os.path.join(program_directory_to_cancer_genome_mutation_frequency,file_name)
+
+    dataframe.to_excel (file_path, index = None, header=True)
 
 def fragment_mean(dataframe):
 
@@ -301,112 +310,57 @@ def pattern(dataframe,mean):
 
     return(pattern_yes_no)
 
-def biomarker_list(dataframe_one):
-        
-        A=[]
+def biomarker_list(dataframe):
 
-        for row in range(0,len(dataframe_one)):
+    return dataframe[dataframe.iloc[:, 2] == 1].iloc[:, 1].tolist()
 
-            if dataframe_one.iat[row,2]==1:
+def mutation_rate_list(dataframe):
 
-                A.append(dataframe_one.iat[row,1])
+    return dataframe[dataframe.iloc[:, 2] == 1].iloc[:, 0].tolist()
 
-        return(A)
+def compute_continuous_mean(dataframe):
 
-def mutation_rate_list(random_dataframe):
+    return Decimal(dataframe['MutationRate'].mean())
 
-    row_value_one_positions=[]
+def compute_continuous_pattern(dataframe, mean_value):
 
-    # Iterates through each row in a dataframe and if one of the rows has a value of 1 at column 2 then the row value is added to a list [1,1,1,1,1,1,1,1,]
-    for row in range(0,len(random_dataframe)):
-        
-        if random_dataframe.iat[row,2]==1:
-            
-            row_value_one_positions.append(random_dataframe.iat[row,0])
-    return(row_value_one_positions)
+    return dataframe['MutationRate'].apply(lambda x: 0 if x < mean_value else 1)
 
+def compute_continuous_mean(dataframe):
 
-def continous_fragment_mean(dataframe_one):
+    return Decimal(dataframe['MutationRate'].mean())
 
-    sums=0
+def compute_continuous_pattern(dataframe, mean_value):
 
-    for i in range(0,len(dataframe_one)):
+    return dataframe['MutationRate'].apply(lambda x: 0 if x < mean_value else 1)
 
-        sums=sums+Decimal(dataframe_one.iat[i,0])
+def mean_table(cancer_type, iteration):
 
-    newsum=sums/(len(dataframe_one))
-
-    return(newsum)
-
-def continous_pattern(dataframe_one,mean):
-
-    pattern_yes_no=[]
-
-    for i in range(0,len(dataframe_one)):
-
-        value=dataframe_one.iat[i,0]
-
-        if value <mean:
-
-            pattern_yes_no.append(0)
-
-        else:
-
-            pattern_yes_no.append(1)
-
-    return(pattern_yes_no)
-
-def mean_table(window_directory,cancer_type,iteration):
-
-    file_name4=(r""+str(window_directory)+"/Output/BiomarkerMutationTables/"+str(cancer_type)+"BiomarkerTypeAndBiomarkerLocationMutationTableI"+str(iteration)+".xlsx")
+    file_name=(f"{cancer_type} Biomarkers with mutation frequency data highest 50% iteration {iteration}.xlsx")
     
-    dataframe_one = pd.read_excel(io=file_name4, sheet_name= "Sheet1")
+    file_path=(program_directory_to_cancer_biomarker_candidates,file_name)
     
-    meangenomefragmentmutationrate=continous_fragment_mean(dataframe_one)
+    dataframe= pd.read_excel(file_path)
     
-    Biomarkers=[]
+    mean_value = compute_continuous_mean(dataframe)
+    dataframe['Pattern'] = compute_continuous_pattern(dataframe, mean_value)
     
-    MutationRates=[]
-    
-    for row in range(0,len(dataframe_one)):
+    file_name=(f"{cancer_type} Biomarkers with mutation frequency data highest 50% iteration {iteration+0.5}.xlsx")
 
-        Biomarkers.append(dataframe_one.iat[row,1])
+    file_path=(program_directory_to_cancer_biomarker_candidates,file_name)
 
-        MutationRates.append(dataframe_one.iat[row,0])
-  
-    FirstData= {"MutationRate":MutationRates,"Biomarker":Biomarkers,"Pattern":continous_pattern(dataframe_one,meangenomefragmentmutationrate)}
+    dataframe.to_excel(file_path, index=None, header=True)
     
-    FirstDataExcelTable = pd.DataFrame(FirstData,index=MutationRates)
-    
-    FirstDataExcelTable.to_excel(r""+str(window_directory)+"/Output/BiomarkerMutationTables/"+str(cancer_type)+"BiomarkerTypeAndBiomarkerLocationMutationTableI"+str(int(iteration)+0.5)+".xlsx", index = None, header=True)
-    
-    file_name=(r""+str(window_directory)+"/Output/BiomarkerMutationTables/"+str(cancer_type)+"BiomarkerTypeAndBiomarkerLocationMutationTableI"+str(int(iteration)+0.5)+".xlsx")
-    
-    df2=pd.read_excel(io=file_name, sheet_name= "Sheet1")
+    # Assuming 'biomarker_list' and 'mutation_rate_list' are functions you've defined elsewhere
+    dataframe['NewBiomarkers'] = biomarker_list(dataframe)
 
-    df2 = pd.DataFrame(FirstData,index=MutationRates)
+    dataframe['NewMutationRates'] = mutation_rate_list(dataframe)
     
-    NewBiomarkers=biomarker_list(df2)
+    file_name=(f"{cancer_type} Biomarkers with mutation frequency data highest 50% iteration {iteration+1}.xlsx")
+
+    file_path=(program_directory_to_cancer_biomarker_candidates,file_name)
     
-    NewMutationRates=mutation_rate_list(df2)
-    
-    SecondData= {"MutationRate":NewMutationRates,"Biomarker":NewBiomarkers}
-    
-    df2 = pd.DataFrame(SecondData,index=NewMutationRates)
-    
-    df2.to_excel (r""+str(window_directory)+"/Output/BiomarkerMutationTables/"+str(cancer_type)+"BiomarkerTypeAndBiomarkerLocationMutationTableI"+str(int(iteration)+1)+".xlsx", index = None, header=True)
-
-#This section of code is the running of the program 
-
-fragment_size=100000
-
-exome_data_mutation_location_column=25
-
-exome_data_sample_column=5
-
-intron_data_mutation_location_column=15
-
-intron_data_sample_column=1
+    dataframe[['NewBiomarkers', 'NewMutationRates']].to_excel(file_path, index=None, header=True)
 
 #  This performs the setup of the programs file structure.
 directory_creation() 
@@ -425,12 +379,21 @@ program_directory_to_cancer_genome_mutation_frequency=os.path.join(path_to_progr
 
 program_directory_to_cancer_biomarker_candidates=os.path.join(path_to_program_directory,"Output","Cancer Biomarker Candidates")
 
-# This function generates a list of fragment descriptors for a specified chromosome.
-# The list is used to create a table representing mutation frequency across the chromosome.
+#Important variables used in numerous functions
+
+selected_fragment_size=100000
 
 selected_fragment_size=int(input("Enter genome fragment size."))
 
 print(f"{selected_fragment_size}bp selected as fragment size.")
+
+exome_data_mutation_location_column=25
+
+exome_data_sample_column=5
+
+intron_data_mutation_location_column=15
+
+intron_data_sample_column=1
 
 cancer_type=input("Enter Cancer you wish to process.")
 
@@ -453,7 +416,7 @@ for chromosome_number in range(1,23):
             else:
                 chromosome_sizes.append(len(formatted_chromosome_data[6:]))
 
-print("1.Chromosome Sizes Calculated.This took ")                             
+print("1.Chromosome Sizes Calculated.")                             
 
 # These are lists,sets and variable used to store cancer patient sample information, cancer patient mutation information, row position,
 # and a unique set of pairs of sample and mutation data.
@@ -465,8 +428,9 @@ exome_row_counter=0
 
 exome_mutation_sample_unique_pairs=set()
 
-# Open a cancer mutation file and place its data in a variable called CSV FileC
-#The function below would be the same as coding file would be the same as non coding, the reason it not because the dataframe has a different structure
+# Open a cancer mutation file and stores the data in a variable
+#The function below would be the same as coding file would be the same as non coding, 
+#the reason it not because the dataframe has a different structure.
 with open(os.path.join(program_directory_to_crude_data,f"{cancer_type}_Coding.csv"),"r") as exome_cancer_mutation__data:
     #This open the cancer types mutation file as a csv file
     csv_exome_cancer_mutation_data=csv.reader(exome_cancer_mutation__data)
@@ -493,14 +457,14 @@ with open(os.path.join(program_directory_to_crude_data,f"{cancer_type}_Coding.cs
                     exome_mutation_sample_unique_pairs.add(str(row[exome_data_sample_column])+str(row[exome_data_mutation_location_column]))
 
 #This determines the number of times an exome file has to be split for all data to be viewable in excel 
-number_of_cancer_exome_mutation_chunks=math.ceil((len(exome_samples))/(fragment_size))
+number_of_cancer_exome_mutation_chunks=math.ceil((len(exome_samples))/(selected_fragment_size))
 
 #This process splits up the large exome cancer file into  smaller exome files which can be viewed.
 for data_chunk_index in range(0,number_of_cancer_exome_mutation_chunks):
 
-    initial_base_position=(fragment_size*data_chunk_index)
+    initial_base_position=(selected_fragment_size*data_chunk_index)
 
-    end_base_position=(fragment_size*(data_chunk_index+1))
+    end_base_position=(selected_fragment_size*(data_chunk_index+1))
 
     #Creates a dictionary called file_data. 
     exome_file_data= {"sample Id":exome_samples[initial_base_position:end_base_position],"Mutation Position":exome_mutation_genome_positions[initial_base_position:end_base_position]}
@@ -541,13 +505,13 @@ with open (os.path.join(program_directory_to_crude_data,f"{cancer_type}_Non_Codi
 
                     intron_mutation_sample_unique_pairs.add(str(row[intron_data_sample_column])+str(row[intron_data_mutation_location_column]))
 
-number_of_cancer_intron_mutation_chunks=math.ceil((len(intron_samples))/(fragment_size))
+number_of_cancer_intron_mutation_chunks=math.ceil((len(intron_samples))/(selected_fragment_size))
 
 for data_chunk_index in range(0,number_of_cancer_intron_mutation_chunks):
 
-    initial_base_position=(fragment_size*data_chunk_index)
+    initial_base_position=(selected_fragment_size*data_chunk_index)
 
-    end_base_position=(fragment_size*(data_chunk_index+1))
+    end_base_position=(selected_fragment_size*(data_chunk_index+1))
 
     intron_file_Data= {"sample Id":intron_samples[initial_base_position:end_base_position],"Mutation Position":intron_mutation_genome_positions[initial_base_position:end_base_position]}
 
@@ -614,7 +578,7 @@ for data_chunk_index in range(0,number_of_processed_coding_files):
     
     print("6.Completed genome fragment list generation.")
     
-    fragment_sequence_percentage=all_chromosomes_fragments_base_coverage(window_directory,selected_fragment_size)#This generates a list of all genome fragments base coverage.
+    fragment_sequence_percentage=all_chromosomes_fragments_base_coverage(selected_fragment_size)#This generates a list of all genome fragments base coverage.
     
     print("7.Completed chromosomes fragments base coverage percentage list.")
     
@@ -622,7 +586,7 @@ for data_chunk_index in range(0,number_of_processed_coding_files):
     
     print("8.Completed creation of Coding data.")
     
-    exome_mutation_frequency_dataframe_creator(exome_fragment_mutation_frequency_data,exome_cancer_cohort_samples,selected_fragment_size,all_chromosome_fragments,fragment_sequence_percentage,cancer_type,window_directory)#This processes the coding mutation data into a dataframe.
+    exome_mutation_frequency_dataframe_creator(exome_fragment_mutation_frequency_data,exome_cancer_cohort_samples,selected_fragment_size,all_chromosome_fragments,fragment_sequence_percentage,cancer_type)#This processes the coding mutation data into a dataframe.
     
 
 # Complete work on a file within a directory which has non coding mutation data for a cohort.
@@ -662,7 +626,7 @@ for data_chunk_index in range(0,number_of_processed_coding_files):
     
     #This critical stage combines exome and intron data to truly understand mutation frequency hotspots 
     #for certain types of cancer
-    cancer_exome_intron_mutation_dataframe_creator(intron_fragment_mutation_frequency_data,SampleListNC,cancer_type,window_directory)#This processes the coding and non coding mutation data into a dataframe.
+    cancer_exome_intron_mutation_dataframe_creator(intron_fragment_mutation_frequency_data,SampleListNC,cancer_type)#This processes the coding and non coding mutation data into a dataframe.
 
 
 print("15.Completed creation of Coding and Non Coding Excel sample data File.")
@@ -677,7 +641,7 @@ print("16.Commencing sample mutation average excel file creation.")
 # cancer mutation frequency hotspots for each cancer type
 
 #File is read
-file_of_interest=f"{cancer_type}IndividualSamplesWholeGenomeFragmentMutationTable.xlsx"
+file_of_interest=f"{cancer_type} Individual Samples Whole Genome Mutation Frequency Distribution.xlsx"
 
 file_path=os.path.join(program_directory_to_cancer_genome_mutation_frequency,file_of_interest)
 
@@ -787,7 +751,7 @@ blood_proteins_only_fragments_data = {"MutationRate": mutation_rate_data, "Blood
 blood_proteins_only_fragments_dataframe = pd.DataFrame(blood_proteins_only_fragments_data, index=mutation_rate_data)
 
 # Save this filtered DataFrame to an Excel file
-biomarker_excel_filename = f"{cancer_type}_Biomarker_Mutation_Table_1.xlsx"
+biomarker_excel_filename = (f"{cancer_type} Biomarkers with mutation frequency data highest 50% iteration 1.xlsx")
 
 biomarker_output_path = os.path.join(program_directory_to_cancer_biomarker_candidates, biomarker_excel_filename)
 
@@ -796,12 +760,12 @@ blood_proteins_only_fragments_dataframe.to_excel(biomarker_output_path, index=No
 #This part calculates the mean frequency for each subsequenty group which meets the relevant criteria,
 # I can definitely streamline this process by selecting the upper 5% means
 
-mean_table(window_directory,cancer_type,1)
+mean_table(cancer_type,1)
 
-mean_table(window_directory,cancer_type,2)
+mean_table(cancer_type,2)
 
-mean_table(window_directory,cancer_type,3)
+mean_table(cancer_type,3)
 
-mean_table(window_directory,cancer_type,4)
+mean_table(cancer_type,4)
 
 print("19.Program completed.")
