@@ -165,27 +165,28 @@ def all_chromosome_mutation_locations(selected_fragment_size, original_mutation_
     # Return the combined list of mutation data for all chromosome fragments.
     return all_chromosome_fragments_mutation_data
 
-def coding_mutation_data(df, sample_list, dictionary_alpha, selected_fragment_size, chromosome_sizes):
+def coding_mutation_data(df, sample_list, sample_dataframe_positions, selected_fragment_size, chromosome_sizes):
     
-    Samplesandmutationpoints = []
+    samples_mutation_points = []
     
     # Filter the dataframe to get mutation positions
     mutation_positions = df[df['Mutation Position'].notna()]['Mutation Position'].tolist()
-    
+    print(1)
     for sample in sample_list:
-        sample_rows = [row_index for row_index, sample_val in dictionary_alpha.items() if int(sample_val) == sample]
-        
+        print(2)
+        sample_rows = [row_index for row_index, sample_value in sample_dataframe_positions.items() if int(sample_value) == sample]
+        print(3)
         mutation_genome_locations = df.iloc[sample_rows]['Mutation Position'].tolist()
-        
+        print(4)
         mutation_genome_locations.sort()
-        
-        Samplesandmutationpoints.append(all_chromosome_mutation_locations(selected_fragment_size, mutation_genome_locations, chromosome_sizes))
-    
-    return Samplesandmutationpoints
+        print(5)
+        samples_mutation_points.append(all_chromosome_mutation_locations(selected_fragment_size, mutation_genome_locations, chromosome_sizes))
+        print(6)
+    return samples_mutation_points
 
-def non_coding_mutation_data(df, sample_list, dictionary_alpha, selected_fragment_size, chromosome_sizes):
+def non_coding_mutation_data(df, sample_list, sample_dataframe_positions, selected_fragment_size, chromosome_sizes):
     # Since the logic is the same as coding_mutation_data, you can just call that function
-    return coding_mutation_data(df, sample_list, dictionary_alpha, selected_fragment_size, chromosome_sizes)
+    return coding_mutation_data(df, sample_list, sample_dataframe_positions, selected_fragment_size, chromosome_sizes)
 
 
 def exome_mutation_frequency_dataframe_creator(mutation_data,sample_list,selected_fragment_size,autosome_chromosomes_fragment_names,fragment_bases_known,cancer_type):# Coding sample mutation data presented into excel table with corresponding chromosome fragment location and base coverage percentages.
@@ -542,7 +543,7 @@ for data_chunk_index in range(0,number_of_processed_coding_files):
     print("4.List of Coding samples without duplicates created.")
     
     exome_sample_dataframe_positions = {i+1: int(sample) for i, sample in enumerate(exome_cancer_cohort_samples_with_repeats)}
-
+    
     print("5.Dictionary of Coding samples with corresponding row coordinates created.")    
     
     all_chromosome_fragments=genome_multi_chromosome_fragment_generator(selected_fragment_size)#This generates a list of all genome fragments.
@@ -588,13 +589,13 @@ for data_chunk_index in range(0,number_of_processed_coding_files):
 
     print("13.Dictionary of Non Coding samples with corresponding row coordinates created.")       
     
-    intron_fragment_mutation_frequency_data=non_coding_mutation_data(intron_mutation_file_data,SampleListNC,intron_sample_dataframe_positions,selected_fragment_size,chromosome_sizes)#This is the non coding mutation data ready to be added to a dataframe.
+    intron_fragment_mutation_frequency_data=non_coding_mutation_data(intron_mutation_file_data,intron_cancer_cohort_samples,intron_sample_dataframe_positions,selected_fragment_size,chromosome_sizes)#This is the non coding mutation data ready to be added to a dataframe.
     
     print("14.Completed creation of Non Coding data.")
     
     #This critical stage combines exome and intron data to truly understand mutation frequency hotspots 
     #for certain types of cancer
-    cancer_exome_intron_mutation_dataframe_creator(intron_fragment_mutation_frequency_data,SampleListNC,cancer_type)#This processes the coding and non coding mutation data into a dataframe.
+    cancer_exome_intron_mutation_dataframe_creator(intron_fragment_mutation_frequency_data,intron_cancer_cohort_samples,cancer_type)#This processes the coding and non coding mutation data into a dataframe.
 
 
 print("15.Completed creation of Coding and Non Coding Excel sample data File.")
