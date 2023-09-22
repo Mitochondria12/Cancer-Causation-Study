@@ -228,27 +228,28 @@ def cancer_exome_intron_mutation_dataframe_creator(intron_mutation_frequency_dat
 
     samples_with_exome_mutation_data=(exome_dataframe.columns.values.tolist())
 
-    for intron_sample in range(0,len(intron_sample_ids)):
+    for intron_sample_index in range(0,len(intron_sample_ids)):
 
-        intron_sample=intron_sample_ids[intron_sample]
+        intron_sample=intron_sample_ids[intron_sample_index]
 
         if str(intron_sample) in samples_with_exome_mutation_data:
-
-            for CodingSampleColumn in range(2,(len(samples_with_exome_mutation_data)-2)):
+            
+            # We begin at position two because the first two columns are not sample data, we are iterating through each relevant sample column.
+            for exome_sample_index in range(2,(len(samples_with_exome_mutation_data)-2)):
                     
-                    if int(samples_with_exome_mutation_data[CodingSampleColumn])== int(intron_sample): 
+                    if int(samples_with_exome_mutation_data[exome_sample_index])== int(intron_sample): 
 
-                        for CodingSamplerow in range(0,len(exome_dataframe.index)):
+                        for exome_sample_match_row_index in range(0,len(exome_dataframe.index)):
 
-                            UpdatedValue=int((intron_mutation_frequency_data[intron_sample])[CodingSamplerow])+int(exome_dataframe.iat[(CodingSamplerow),(CodingSampleColumn+2)])#Problem Code
+                            updated_exome_sample=int((intron_mutation_frequency_data[intron_sample])[exome_sample_match_row_index])+int(exome_dataframe.iat[(exome_sample_match_row_index),(exome_sample_index+2)])#Problem Code
                             
-                            exome_dataframe.at[CodingSamplerow,samples_with_exome_mutation_data[(CodingSampleColumn+2)]]=int(UpdatedValue)#Works correctly    
+                            exome_dataframe.at[exome_sample_match_row_index,samples_with_exome_mutation_data[(exome_sample_index+2)]]=int(updated_exome_sample)#Works correctly    
         
         else:
 
-            Newvalue=intron_mutation_frequency_data[intron_sample]
+            new_intron_sample=intron_mutation_frequency_data[intron_sample]
 
-            exome_dataframe[str(intron_sample_ids[intron_sample])] = Newvalue
+            exome_dataframe[str(intron_sample_ids[intron_sample])] = new_intron_sample
 
     file_name=f"{cancer_type} Individual Samples Whole Genome Mutation Frequency Distribution.xlsx"
 
