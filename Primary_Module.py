@@ -107,19 +107,22 @@ def dictionary_of_fragment_mutation(selected_fragment_size,formatted_mutation_da
     number_of_fragments=math.ceil(chromosome_size/selected_fragment_size)
     
     for fragment_index in range(0,(number_of_fragments)):
-        
-        fragment_descriptor=(f"Chromosome {chromosome_number} Fragment {fragment_index}, Basepairs {fragment_index*selected_fragment_size+1}-{fragment_index*selected_fragment_size+selected_fragment_size}")
+
+        start_fragment = fragment_index * selected_fragment_size + 1
+
+        end_fragment = fragment_index * selected_fragment_size + selected_fragment_size
+
+        fragment_descriptor=(f"Chromosome {chromosome_number} Fragment {fragment_index}, Basepairs {start_fragment}-{end_fragment}")
         
         chromosome_mutations.update({fragment_descriptor:0})
 
         for mutation in formatted_mutation_data:
-    
+
             if mutation=="0-1":
     
                 continue
-            else:
-    
-                fragment_descriptor=(f"Chromosome {chromosome_number} Fragment {fragment_index}, Basepairs {fragment_index*selected_fragment_size+1}-{fragment_index*selected_fragment_size+selected_fragment_size}")
+                        
+            elif start_fragment <= int(mutation) < end_fragment:
                 
                 # Update or initialize the count for the given fragment_descriptor
                 current_count = chromosome_mutations.get(fragment_descriptor, 0)
@@ -199,7 +202,7 @@ def exome_mutation_frequency_dataframe_creator(mutation_data, sample_list, selec
     new_columns = pd.DataFrame({str(sample): mutation_data[i] for i, sample in enumerate(sample_list)}, index=dataframe.index)
 
     print("concatting")
-    
+
     # Concatenate the original DataFrame with the new DataFrame containing all the new columns
     dataframe = pd.concat([dataframe, new_columns], axis=1)
 
