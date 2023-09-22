@@ -224,37 +224,37 @@ def cancer_exome_intron_mutation_dataframe_creator(intron_mutation_frequency_dat
 
     file_path=os.path.join(program_directory_to_cancer_genome_mutation_frequency,file_name)
     
-    dataframe=pd.read_excel(file_path, sheet_name= "Sheet1")
+    exome_dataframe=pd.read_excel(file_path, sheet_name= "Sheet1")
 
-    SampleListCodingData=(dataframe.columns.values.tolist())
+    samples_with_exome_mutation_data=(exome_dataframe.columns.values.tolist())
 
-    for NonCodingSample in range(0,len(intron_sample_ids)):
+    for intron_sample in range(0,len(intron_sample_ids)):
 
-        Individual_Sample=intron_sample_ids[NonCodingSample]
+        intron_sample=intron_sample_ids[intron_sample]
 
-        if str(Individual_Sample) in SampleListCodingData:
+        if str(intron_sample) in samples_with_exome_mutation_data:
 
-            for CodingSampleColumn in range(2,(len(SampleListCodingData)-2)):
+            for CodingSampleColumn in range(2,(len(samples_with_exome_mutation_data)-2)):
                     
-                    if int(SampleListCodingData[CodingSampleColumn])== int(Individual_Sample): 
+                    if int(samples_with_exome_mutation_data[CodingSampleColumn])== int(intron_sample): 
 
-                        for CodingSamplerow in range(0,len(dataframe.index)):
+                        for CodingSamplerow in range(0,len(exome_dataframe.index)):
 
-                            UpdatedValue=int((intron_mutation_frequency_data[NonCodingSample])[CodingSamplerow])+int(dataframe.iat[(CodingSamplerow),(CodingSampleColumn+2)])#Problem Code
+                            UpdatedValue=int((intron_mutation_frequency_data[intron_sample])[CodingSamplerow])+int(exome_dataframe.iat[(CodingSamplerow),(CodingSampleColumn+2)])#Problem Code
                             
-                            dataframe.at[CodingSamplerow,SampleListCodingData[(CodingSampleColumn+2)]]=int(UpdatedValue)#Works correctly    
+                            exome_dataframe.at[CodingSamplerow,samples_with_exome_mutation_data[(CodingSampleColumn+2)]]=int(UpdatedValue)#Works correctly    
         
         else:
 
-            Newvalue=intron_mutation_frequency_data[NonCodingSample]
+            Newvalue=intron_mutation_frequency_data[intron_sample]
 
-            dataframe[str(intron_sample_ids[NonCodingSample])] = Newvalue
+            exome_dataframe[str(intron_sample_ids[intron_sample])] = Newvalue
 
     file_name=f"{cancer_type} Individual Samples Whole Genome Mutation Frequency Distribution.xlsx"
 
     file_path=os.path.join(program_directory_to_cancer_genome_mutation_frequency,file_name)
 
-    dataframe.to_excel (file_path, index = None, header=True)
+    exome_dataframe.to_excel (file_path, index = None, header=True)
 
 def fragment_mean(dataframe):
 
