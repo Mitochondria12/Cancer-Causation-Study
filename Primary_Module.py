@@ -586,7 +586,7 @@ for data_chunk_index in range(0,number_of_processed_coding_files):
 
     print("12.List of Non Coding samples without duplicates created.")
     
-    intron_sample_dataframe_positions = {i+1: int(sample) for i, sample in enumerate(intron_cancer_cohort_samples_with_repeats)}
+    intron_sample_dataframe_positions = {i: int(sample) for i, sample in enumerate(intron_cancer_cohort_samples_with_repeats)}
 
     print("13.Dictionary of Non Coding samples with corresponding row coordinates created.")       
     
