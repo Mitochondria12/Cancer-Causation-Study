@@ -96,7 +96,7 @@ def extract_mutation_positions(chromosome_number, mutation_data):
 # Creates a Dictionary which has mutation count as one key and chromosome fragment location as the other.
 def dictionary_of_fragment_mutation(selected_fragment_size,formatted_mutation_data,chromosome_number,chromosome_sizes):
     
-    chromosomes={}
+    chromosome_mutations={}
 
     # Adjust for the off-by-one difference between chromosome numbering and list indexing
     adjusted_chromosome_index = chromosome_number - 1
@@ -110,7 +110,7 @@ def dictionary_of_fragment_mutation(selected_fragment_size,formatted_mutation_da
         
         fragment_descriptor=(f"Chromosome {chromosome_number} Fragment {fragment_index}, Basepairs {fragment_index*selected_fragment_size+1}-{fragment_index*selected_fragment_size+selected_fragment_size}")
         
-        chromosomes.update({fragment_descriptor:0})
+        chromosome_mutations.update({fragment_descriptor:0})
 
         for mutation in formatted_mutation_data:
     
@@ -122,11 +122,11 @@ def dictionary_of_fragment_mutation(selected_fragment_size,formatted_mutation_da
                 fragment_descriptor=(f"Chromosome {chromosome_number} Fragment {fragment_index}, Basepairs {fragment_index*selected_fragment_size+1}-{fragment_index*selected_fragment_size+selected_fragment_size}")
                 
                 # Update or initialize the count for the given fragment_descriptor
-                current_count = chromosomes.get(fragment_descriptor, 0)
+                current_count = chromosome_mutations.get(fragment_descriptor, 0)
     
-                chromosomes[fragment_descriptor] = current_count + 1
+                chromosome_mutations[fragment_descriptor] = current_count + 1
 
-    return(chromosomes)
+    return(chromosome_mutations)
 
 #Converts chromosome dictionary into chromosome mutation fragment list for dataframe addition. 
 def dictionary_to_list(chromosome_dictionary):
@@ -197,6 +197,8 @@ def exome_mutation_frequency_dataframe_creator(mutation_data, sample_list, selec
     
     # Create a new DataFrame to hold the new columns
     new_columns = pd.DataFrame({str(sample): mutation_data[i] for i, sample in enumerate(sample_list)}, index=dataframe.index)
+
+    print("concatting")
     
     # Concatenate the original DataFrame with the new DataFrame containing all the new columns
     dataframe = pd.concat([dataframe, new_columns], axis=1)
