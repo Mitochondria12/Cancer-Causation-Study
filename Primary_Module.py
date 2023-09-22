@@ -175,10 +175,11 @@ def coding_mutation_data(df, sample_list, sample_dataframe_positions, selected_f
     for sample in sample_list:
         print(sample)
         
-        sample_rows = [row_index +1 for row_index, sample_value in sample_dataframe_positions.items() if int(sample_value) == sample]
+        sample_rows = [row_index  for row_index, sample_value in sample_dataframe_positions.items() if int(sample_value) == sample]
         #Extracts all of a single samples mutation data
-        mutation_genome_locations = df.iloc[sample_rows]['Mutation Position'].tolist()
         print(sample_rows)
+        mutation_genome_locations = df.iloc[sample_rows]['Mutation Position'].tolist()
+        
         mutation_genome_locations.sort()
 
         samples_mutation_points.append(all_chromosome_mutation_locations(selected_fragment_size, mutation_genome_locations, chromosome_sizes))
@@ -190,17 +191,16 @@ def non_coding_mutation_data(df, sample_list, sample_dataframe_positions, select
     return coding_mutation_data(df, sample_list, sample_dataframe_positions, selected_fragment_size, chromosome_sizes)
 
 
-def exome_mutation_frequency_dataframe_creator(mutation_data,sample_list,selected_fragment_size,autosome_chromosomes_fragment_names,fragment_bases_known,cancer_type):# Coding sample mutation data presented into excel table with corresponding chromosome fragment location and base coverage percentages.
+def exome_mutation_frequency_dataframe_creator(mutation_data, sample_list, selected_fragment_size, autosome_chromosomes_fragment_names, fragment_bases_known, cancer_type):
+    # Initialize the original DataFrame
+    data = {"GenomeFragments": autosome_chromosomes_fragment_names, "Encoded Base Percentage": fragment_bases_known}
+    dataframe = pd.DataFrame(data, index=autosome_chromosomes_fragment_names)
     
-    data = {"GenomeFragments":autosome_chromosomes_fragment_names,"Encoded Base Percentage":fragment_bases_known}
+    # Create a new DataFrame to hold the new columns
+    new_columns = pd.DataFrame({str(sample): mutation_data[i] for i, sample in enumerate(sample_list)}, index=dataframe.index)
     
-    dataframe = pd.DataFrame(data,index=autosome_chromosomes_fragment_names)
-
-    for i in range(0,len(sample_list),1):
-
-        value=mutation_data[i]
-
-        dataframe[str(sample_list[i])] = value 
+    # Concatenate the original DataFrame with the new DataFrame containing all the new columns
+    dataframe = pd.concat([dataframe, new_columns], axis=1)
 
     file_name=f"{cancer_type} Individual Samples Exome Mutation Frequency.xlsx"
 
@@ -543,7 +543,7 @@ for data_chunk_index in range(0,number_of_processed_coding_files):
     
     print("4.List of Coding samples without duplicates created.")
     
-    exome_sample_dataframe_positions = {i+1: int(sample) for i, sample in enumerate(exome_cancer_cohort_samples_with_repeats)}
+    exome_sample_dataframe_positions = {i: int(sample) for i, sample in enumerate(exome_cancer_cohort_samples_with_repeats)}
     
     print("5.Dictionary of Coding samples with corresponding row coordinates created.")    
     
