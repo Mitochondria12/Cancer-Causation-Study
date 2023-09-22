@@ -226,25 +226,31 @@ def cancer_exome_intron_mutation_dataframe_creator(intron_mutation_frequency_dat
     
     exome_dataframe=pd.read_excel(file_path, sheet_name= "Sheet1")
 
+    #A list containing all the samples already present in the exome dataset
     samples_with_exome_mutation_data=(exome_dataframe.columns.values.tolist())
 
     for intron_sample_index in range(0,len(intron_sample_ids)):
 
         intron_sample=intron_sample_ids[intron_sample_index]
 
+        #verifies if the intron sample is in the list of exome samples.
         if str(intron_sample) in samples_with_exome_mutation_data:
             
             # We begin at position two because the first two columns are not sample data, we are iterating through each relevant sample column.
-            for exome_sample_index in range(2,(len(samples_with_exome_mutation_data)-2)):
-                    
-                    if int(samples_with_exome_mutation_data[exome_sample_index])== int(intron_sample): 
+            for exome_sample_column_index in range(2,(len(samples_with_exome_mutation_data))):
+                    #verify that the current intron sample is equal to the exome sample at a certain column index in exome dataframe
+                    if int(samples_with_exome_mutation_data[exome_sample_column_index])== int(intron_sample): 
 
                         for exome_sample_match_row_index in range(0,len(exome_dataframe.index)):
-
-                            updated_exome_sample=int((intron_mutation_frequency_data[intron_sample])[exome_sample_match_row_index])+int(exome_dataframe.iat[(exome_sample_match_row_index),(exome_sample_index+2)])#Problem Code
+                            #think slowly here
+                            updated_exome_sample=int((intron_mutation_frequency_data[intron_sample_index])[exome_sample_match_row_index])+int(exome_dataframe.iat[(exome_sample_match_row_index),(exome_sample_column_index)])#Problem Code
                             
-                            exome_dataframe.at[exome_sample_match_row_index,samples_with_exome_mutation_data[(exome_sample_index+2)]]=int(updated_exome_sample)#Works correctly    
-        
+                            exome_dataframe.at[exome_sample_match_row_index,samples_with_exome_mutation_data[(exome_sample_column_index)]]=int(updated_exome_sample)#Works correctly    
+                    
+                    else:
+
+                        continue
+        #When intron sample is not present in the list of exome samples is gets added to the dataframe.
         else:
 
             new_intron_sample=intron_mutation_frequency_data[intron_sample]
@@ -587,8 +593,8 @@ for data_chunk_index in range(0,number_of_processed_coding_files):
     print("11.List of Non Coding samples containing duplicates created.")
     
     # Directly convert the list with potential repeats to a set to get unique values.
-    intron_cancer_cohort_samples = list(set(map(int, intron_cancer_cohort_samples_with_repeats)))
-
+    intron_cancer_cohort_samples = list(set(int(sample) for sample in intron_cancer_cohort_samples_with_repeats))
+ 
     print("12.List of Non Coding samples without duplicates created.")
     
     intron_sample_dataframe_positions = {i: int(sample) for i, sample in enumerate(intron_cancer_cohort_samples_with_repeats)}
