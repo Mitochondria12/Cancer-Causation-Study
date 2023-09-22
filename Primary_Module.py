@@ -114,7 +114,7 @@ def dictionary_of_fragment_mutation(selected_fragment_size,formatted_mutation_da
 
         for mutation in formatted_mutation_data:
     
-            if mutation==0:
+            if mutation=="0-1":
     
                 continue
             else:
@@ -173,11 +173,10 @@ def coding_mutation_data(df, sample_list, sample_dataframe_positions, selected_f
     #Sample dataframe positions is a dictionary containing key value pairs like {index:sample_number_position}
     #mutation_positions = df[df['Mutation Position'].notna()]['Mutation Position'].tolist()
     for sample in sample_list:
-        print(sample)
         
         sample_rows = [row_index  for row_index, sample_value in sample_dataframe_positions.items() if int(sample_value) == sample]
         #Extracts all of a single samples mutation data
-        print(sample_rows)
+
         mutation_genome_locations = df.iloc[sample_rows]['Mutation Position'].tolist()
         
         mutation_genome_locations.sort()
@@ -356,7 +355,7 @@ program_directory_to_cancer_biomarker_candidates=os.path.join(path_to_program_di
 
 #selected_fragment_size=int(input("Enter genome fragment size."))
 
-selected_fragment_size=100000
+selected_fragment_size=1000000
 
 print(f"{selected_fragment_size}bp selected as fragment size.")
 
