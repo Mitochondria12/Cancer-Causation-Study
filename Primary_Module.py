@@ -170,18 +170,19 @@ def coding_mutation_data(df, sample_list, sample_dataframe_positions, selected_f
     samples_mutation_points = []
     
     # Filter the dataframe to get mutation positions
-    mutation_positions = df[df['Mutation Position'].notna()]['Mutation Position'].tolist()
-    print(1)
+    #Sample dataframe positions is a dictionary containing key value pairs like {index:sample_number_position}
+    #mutation_positions = df[df['Mutation Position'].notna()]['Mutation Position'].tolist()
     for sample in sample_list:
-        print(2)
-        sample_rows = [row_index for row_index, sample_value in sample_dataframe_positions.items() if int(sample_value) == sample]
-        print(3)
+        
+        sample_rows = [row_index +1 for row_index, sample_value in sample_dataframe_positions.items() if int(sample_value) == sample]
+        print(1)
+        #Extracts all of a single samples mutation data
         mutation_genome_locations = df.iloc[sample_rows]['Mutation Position'].tolist()
-        print(4)
+        print(2)
         mutation_genome_locations.sort()
-        print(5)
+        print(3)
         samples_mutation_points.append(all_chromosome_mutation_locations(selected_fragment_size, mutation_genome_locations, chromosome_sizes))
-        print(6)
+        print(4)
     return samples_mutation_points
 
 def non_coding_mutation_data(df, sample_list, sample_dataframe_positions, selected_fragment_size, chromosome_sizes):
