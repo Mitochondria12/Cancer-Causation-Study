@@ -219,17 +219,24 @@ def exome_mutation_frequency_dataframe_creator(mutation_data, sample_list, selec
 #If it is not present a new column is added
 
 def cancer_exome_intron_mutation_dataframe_creator(intron_mutation_frequency_data,intron_sample_ids,cancer_type):#Non Coding sample mutation data and coding sample mutation data combined into new excel table.
-    
+    print(len(intron_mutation_frequency_data))
+    print(len(intron_sample_ids))
     file_name=f"{cancer_type} Individual Samples Exome Mutation Frequency.xlsx"
 
     file_path=os.path.join(program_directory_to_cancer_genome_mutation_frequency,file_name)
     
     exome_dataframe=pd.read_excel(file_path, sheet_name= "Sheet1")
 
-    #A list containing all the samples already present in the exome dataset
-    samples_with_exome_mutation_data=(exome_dataframe.columns.values.tolist())
+    number_of_rows_exome_dataframe=len(exome_dataframe.index)
 
-    for intron_sample_index in range(0,len(intron_sample_ids)):
+    #A list containing all the samples already present in the exome dataset
+    samples_with_exome_mutation_data=(exome_dataframe.columns.values.tolist()) # The first two columns are not to be used,
+
+    number_of_exome_columns=len(samples_with_exome_mutation_data)
+
+    number_of_intron_samples=len(intron_sample_ids)
+    
+    for intron_sample_index in range(0,number_of_intron_samples):
 
         intron_sample=intron_sample_ids[intron_sample_index]
 
@@ -237,11 +244,16 @@ def cancer_exome_intron_mutation_dataframe_creator(intron_mutation_frequency_dat
         if str(intron_sample) in samples_with_exome_mutation_data:
             
             # We begin at position two because the first two columns are not sample data, we are iterating through each relevant sample column.
-            for exome_sample_column_index in range(2,(len(samples_with_exome_mutation_data))):
+            for exome_sample_column_index in range(2,number_of_exome_columns):
                     #verify that the current intron sample is equal to the exome sample at a certain column index in exome dataframe
-                    if int(samples_with_exome_mutation_data[exome_sample_column_index])== int(intron_sample): 
+                    
+                    exome_sample=samples_with_exome_mutation_data[exome_sample_column_index]
 
-                        for exome_sample_match_row_index in range(0,len(exome_dataframe.index)):
+                    if int(exome_sample)== int(intron_sample): 
+
+                        #print(intron_sample,exome_sample)
+
+                        for exome_sample_match_row_index in range(0,number_of_rows_exome_dataframe):
                             #think slowly here
                             updated_exome_sample=int((intron_mutation_frequency_data[intron_sample_index])[exome_sample_match_row_index])+int(exome_dataframe.iat[(exome_sample_match_row_index),(exome_sample_column_index)])#Problem Code
                             
@@ -252,10 +264,10 @@ def cancer_exome_intron_mutation_dataframe_creator(intron_mutation_frequency_dat
                         continue
         #When intron sample is not present in the list of exome samples is gets added to the dataframe.
         else:
+            
+            new_intron_sample=intron_mutation_frequency_data[intron_sample_index]
 
-            new_intron_sample=intron_mutation_frequency_data[intron_sample]
-
-            exome_dataframe[str(intron_sample_ids[intron_sample])] = new_intron_sample
+            exome_dataframe[str(intron_sample_ids[intron_sample_index])] = new_intron_sample
 
     file_name=f"{cancer_type} Individual Samples Whole Genome Mutation Frequency Distribution.xlsx"
 
@@ -634,7 +646,7 @@ multi_chromosome_fragment_mutation_freq = []
 num_rows, num_cols = cancer_samples_mutation_freq_distribution_data.shape
 
 # Note: Adjusted the range to use num_rows and num_cols
-for fragment in range(1, num_rows):
+for fragment in range(0, num_rows):
     
     fragment_mean_mutation_frequency = 0
     
