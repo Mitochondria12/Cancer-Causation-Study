@@ -10,5 +10,6 @@ We obviously will want to knockout fragments which have no impact, during the fe
 are equal to zero reducing the pixel size of each image. 
 This project will also need whole mutation data for patients without cancer, so that the model can identify healthy tissue patterns.
 
-This is a rough draft of my project, as I had multiple versions of my masters research mutation frequency code I am having to review which file is functional.
-I have updated one of the modules and I am gradually improving its readability.
+The current program generates the mean mutation frequency distribution for cancer cohorts of interest, as well as generating an individual sample mutation frequency distribution table. The program also identifies the location of proteins from the blood protein atlas in the genome and there corresponding mutation frequency, it selects the proteins located in the highest mutation frequency regions for further research.
+
+The next stages of the project will be converting each individual sample mutation frequency to a image for processing.
