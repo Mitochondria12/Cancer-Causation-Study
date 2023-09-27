@@ -112,7 +112,7 @@ cancer_cohort_average_mutation_frequency_distribution_dataframe=pd.read_excel(fi
 
 blood_protein_genomic_file = os.path.join(program_directory_to_crude_data)
 
-blood_protein_genomic_file_data = pd.read_excel(blood_protein_genomic_file, sheet_name="Sheet1")
+blood_protein_genomic_file_data = pd.read_excel(blood_protein_genomic_file)
 
 # Initialize an empty list to hold proteins ordered by their fragment range
 ordered_proteins_by_fragment_range = []
