@@ -219,8 +219,8 @@ def exome_mutation_frequency_dataframe_creator(mutation_data, sample_list, selec
 #If it is not present a new column is added
 
 def cancer_exome_intron_mutation_dataframe_creator(intron_mutation_frequency_data,intron_sample_ids,cancer_type):#Non Coding sample mutation data and coding sample mutation data combined into new excel table.
-    print(len(intron_mutation_frequency_data))
-    print(len(intron_sample_ids))
+
+
     file_name=f"{cancer_type} Individual Samples Exome Mutation Frequency.xlsx"
 
     file_path=os.path.join(program_directory_to_cancer_genome_mutation_frequency,file_name)
@@ -251,7 +251,7 @@ def cancer_exome_intron_mutation_dataframe_creator(intron_mutation_frequency_dat
 
                     if int(exome_sample)== int(intron_sample): 
 
-                        #print(intron_sample,exome_sample)
+
 
                         for exome_sample_match_row_index in range(0,number_of_rows_exome_dataframe):
                             #think slowly here
@@ -330,10 +330,10 @@ def compute_continuous_pattern(dataframe, mean_value):
     return dataframe['MutationRate'].apply(lambda x: 0 if x < mean_value else 1)
 
 def mean_table(cancer_type, iteration):
-
+    
     file_name=(f"{cancer_type} Biomarkers with mutation frequency data highest 50% iteration {iteration}.xlsx")
     
-    file_path=(program_directory_to_cancer_biomarker_candidates,file_name)
+    file_path=os.path.join(program_directory_to_cancer_biomarker_candidates,file_name)
     
     dataframe= pd.read_excel(file_path)
     
@@ -342,20 +342,22 @@ def mean_table(cancer_type, iteration):
     
     file_name=(f"{cancer_type} Biomarkers with mutation frequency data highest 50% iteration {iteration+0.5}.xlsx")
 
-    file_path=(program_directory_to_cancer_biomarker_candidates,file_name)
+    file_path=os.path.join(program_directory_to_cancer_biomarker_candidates,file_name)
 
     dataframe.to_excel(file_path, index=None, header=True)
     
     # Assuming 'biomarker_list' and 'mutation_rate_list' are functions you've defined elsewhere
-    dataframe['NewBiomarkers'] = biomarker_list(dataframe)
-
-    dataframe['NewMutationRates'] = mutation_rate_list(dataframe)
+    data = {
+    "MutationRate": mutation_rate_list(dataframe),
+    "Blood soluble proteins coded in fragment": biomarker_list(dataframe)}
     
+    df = pd.DataFrame(data)
+
     file_name=(f"{cancer_type} Biomarkers with mutation frequency data highest 50% iteration {iteration+1}.xlsx")
 
-    file_path=(program_directory_to_cancer_biomarker_candidates,file_name)
+    file_path=os.path.join(program_directory_to_cancer_biomarker_candidates,file_name)
     
-    dataframe[['NewBiomarkers', 'NewMutationRates']].to_excel(file_path, index=None, header=True)
+    df.to_excel(file_path, index=None, header=True)
 
 #  This performs the setup of the programs file structure.
 directory_creation() 
@@ -699,20 +701,20 @@ for fragment in range(0, len(cancer_cohort_average_mutation_frequency_distributi
     # Extract chromosome number, start position, and end position from the fragment
     chromosome_number = int((re.search('Chromosome(.*)Fragment', cancer_cohort_average_mutation_frequency_distribution_dataframe .iat[fragment, 0])).group(1))
 
-    start_position = int((re.search('Basepairs(.*)-', cancer_cohort_average_mutation_frequency_distribution_dataframe .iat[fragment, 0])).group(1))
+    start_position = int((re.search('Base pairs (.*)-', cancer_cohort_average_mutation_frequency_distribution_dataframe .iat[fragment, 0])).group(1))
 
-    end_position = int((re.search('-(.*)', cancer_cohort_average_mutation_frequency_distribution_dataframe .iat[fragment, 0])).group(1))
+    end_position = int((re.search('- (.*)', cancer_cohort_average_mutation_frequency_distribution_dataframe .iat[fragment, 0])).group(1))
     
     # Initialize an empty list to hold proteins found in the current fragment's genomic location
     proteins_in_fragment_genomic_location = []
     
     # Define the condition for selecting proteins that lie within the current fragment
-    condition = (blood_protein_genomic_file_data['Genomic Position'] >= start_position) & \
-                (blood_protein_genomic_file_data['Genomic Position'] <= end_position) & \
-                (blood_protein_genomic_file_data['Chromosome'] == int(chromosome_number))
+    condition = (blood_protein_genomic_file_data['Chromosome Position Start'] >= start_position) & \
+                (blood_protein_genomic_file_data['Chromosome Position End'] <= end_position) & \
+                (blood_protein_genomic_file_data['Chromosome Number '] == int(chromosome_number))
     
     # Extract the names of proteins that satisfy the condition
-    proteins_in_fragment = blood_protein_genomic_file_data.loc[condition, 'Protein Name'].tolist()
+    proteins_in_fragment = blood_protein_genomic_file_data.loc[condition, 'Gene Name'].tolist()
     
     # Append the list of proteins found in the current fragment to the ordered list
     ordered_proteins_by_fragment_range.append(proteins_in_fragment)
@@ -739,7 +741,7 @@ avg_mut_freq_blood_sol_protein_file = output_path
 
 avg_mut_freq_blood_sol_protein_data = pd.read_excel(avg_mut_freq_blood_sol_protein_file, sheet_name="Sheet1")
 
-# Initialize empty lists to store Blood Soluble Proteins and Mutation Rates
+# Initialize empty lists to store Blood Soluble P1roteins and Mutation Rates
 blood_soluble_proteins = []
 
 mutation_rate_data = []
