@@ -18,7 +18,7 @@
     - Go to the `Reference` folder within the generated directories.
 
 2. **Add Chromosome Autosome FASTA Files**
-    - Ensure they resemble the example 'chromosome 1' FASTA folder in the `Resources` file.
+    - Ensure they resemble the example 'chromosome 22' FASTA folder in the `Resources` file.
 
 ## Collecting Cancer Data
 1. **Visit the COSMIC Database**

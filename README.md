@@ -10,9 +10,11 @@ In the complex landscape of cancer research, identifying DNA regions crucial to 
 ### Mutational Frequency Analysis
 Generates mean mutation frequency distributions for various cancer cohorts.
 Produces individual sample mutation frequency distribution tables.
-### Protein Location Identifier (In Development)
+### Protein Location Identifier
 Identifies proteins in the genome based on data from the blood protein atlas.
 Prioritizes proteins situated in high-mutation-frequency regions for further investigation.
+### Convolutional Neural Network(In Development)
+Utilizes machine learning algorithms to analyze and categorize images generated from genomic mutation frequency distributions. These categorizations distinguish between various cancer types and healthy tissue, offering a nuanced approach to cancer diagnosis. Additionally, the system employs random sampling techniques to identify specific genomic regions that demonstrate increased susceptibility to particular forms of cancer progression, thereby providing avenues for targeted research and potential therapies.
 ## Technical Details
 ### Data Complexity
 Incorporates both exome and intron data, often exceeding 1 million rows of mutation data points.
