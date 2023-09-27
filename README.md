@@ -3,8 +3,8 @@
 In the complex landscape of cancer research, identifying DNA regions crucial to cancer development can revolutionize treatment plans and therapies. This project leverages the power of Convolutional Neural Networks (CNNs) to interpret genomic mutation frequency data, facilitating the accurate categorization of various cancer types and isolating influential DNA fragments.
 
 ## Objectives
-1. **Cancer Classification**: To classify cancer samples by type, using their genomic mutation frequency as input data.
-2. **Feature Selectio**n: To systematically pinpoint DNA fragments responsible for specific cancer types.
+1. **Cancer Classification**: To classify cancer samples by type, using their genomic mutation frequency distribution as input data.
+2. **Feature Selection**: To systematically pinpoint DNA fragments responsible for specific cancer types.
 3. **Comparative Analysis**: To include healthy tissue samples for a more robust machine learning model.
 ## Key Features
 ### Mutational Frequency Analysis
